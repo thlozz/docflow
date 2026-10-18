@@ -1,4 +1,4 @@
-"""DocFlow web interface — v0.6."""
+"""DocFlow web interface — v0.7."""
 from pathlib import Path
 import io
 import re
@@ -93,7 +93,7 @@ div[data-testid="stAlert"] {border-radius:13px}
 @media(max-width:850px) {.df-hero {padding-right:42%}.df-timeline {grid-template-columns:1fr}.df-showcase {grid-template-columns:1fr}}
 @media(max-width:650px) {.df-hero {min-height:410px;padding:30px 24px;justify-content:flex-start}.df-hero-art {top:auto;bottom:-65px;right:-55px;width:65%;height:230px;opacity:.55}.df-hero h1 {font-size:2rem!important}.df-showcase {padding:26px}.df-story {padding:30px 0 5px}}
 
-/* V0.6 — layered 3D document scene and progressive scroll narrative */
+/* V0.7 — layered 3D document scene and progressive scroll narrative */
 .df-hero {isolation:isolate;min-height:430px}
 .df-scene {perspective:950px;transform-style:preserve-3d;overflow:visible}
 .df-glow {position:absolute;width:290px;height:290px;border-radius:50%;background:radial-gradient(circle,#fb718550,transparent 70%);filter:blur(22px);top:50%;left:50%;transform:translate(-50%,-50%)}
@@ -140,6 +140,22 @@ div[data-testid="stAlert"] {border-radius:13px}
 @media(max-width:850px) {.df-hero {padding-right:40%}.df-scene {width:45%}.df-document {scale:.82}.df-orbit {scale:.8}}
 @media(max-width:650px) {.df-hero {min-height:450px;padding-right:24px}.df-scene {width:78%;height:245px;right:-18%;bottom:-68px;top:auto;opacity:.56}.df-document {scale:.7}.df-timeline:before {display:none}.df-showcase {min-height:0}}
 @media(prefers-reduced-motion:reduce) {.df-document,.df-float,.df-orbit,.df-scroll-progress,.df-story-title,.df-story-subtitle,.df-step,.df-showcase,.df-end,.df-preview {animation:none!important;transition:none!important;filter:none!important}.df-scroll-progress {width:100%}}
+
+/* V0.7 — consistent gradient design across every workspace */
+.df-workspace-hero {position:relative;overflow:hidden;border-radius:22px;background:radial-gradient(circle at 87% 15%,#f43f5e45,transparent 30%),linear-gradient(118deg,#111827 0%,#20293b 62%,#561e32 100%);padding:34px 38px;margin:0 0 28px;box-shadow:0 14px 38px #11182719;isolation:isolate}
+.df-workspace-hero:before {content:"";position:absolute;width:235px;height:235px;border:1px solid #fb718555;border-radius:45px;transform:rotate(28deg);right:-38px;top:-70px;box-shadow:0 0 0 35px #fb71850a,0 0 0 75px #fb718508}
+.df-workspace-hero:after {content:"";position:absolute;width:105px;height:135px;border-radius:12px;background:linear-gradient(145deg,#ffffff30,#ffffff08);border:1px solid #ffffff25;right:105px;top:30px;transform:rotate(-16deg);box-shadow:18px 20px 0 #fb71851a;pointer-events:none}
+.df-workspace-hero .df-eyebrow {color:#fda4af;position:relative;z-index:1}
+.df-workspace-hero h1 {color:white!important;font-size:clamp(1.7rem,3vw,2.55rem)!important;margin:0 0 10px;max-width:760px;position:relative;z-index:1}
+.df-workspace-hero p {color:#cbd5e1;max-width:660px;margin:0;position:relative;z-index:1}
+.df-workspace-tip {background:linear-gradient(105deg,#fff,#fff1f2);border:1px solid #fecdd3;border-radius:15px;padding:15px 18px;margin:10px 0 24px;color:#475569}
+.df-workspace-tip strong {color:#be123c}
+.df-section-divider {height:1px;background:linear-gradient(90deg,transparent,#fecdd3 20%,#e11d48 50%,#fecdd3 80%,transparent);margin:30px 0}
+.df-benefits {display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:0 0 26px}
+.df-benefit {padding:20px;background:linear-gradient(145deg,#fff,#fff7f8);border:1px solid #ffe4e6;border-radius:17px}
+.df-benefit strong {display:block;font-size:1rem;color:#9f1239;margin-bottom:8px}
+.df-benefit span {font-size:.86rem;color:#64748b}
+@media(max-width:700px){.df-workspace-hero {padding:26px 22px}.df-workspace-hero:after{right:-40px;opacity:.3}.df-benefits{grid-template-columns:1fr}}
 </style>""", unsafe_allow_html=True)
 
 MAX_FILES = 1200
@@ -272,7 +288,7 @@ def output_actions(rows, output_dir=None, key="output"):
 
 with st.sidebar:
     st.markdown('<div class="df-brand"><span class="df-logo">◈</span> DocFlow</div>', unsafe_allow_html=True)
-    st.caption("WORKSPACE / V0.6")
+    st.caption("WORKSPACE / V0.7")
     st.markdown('<div class="df-section" style="color:#94a3b8">NAVEGAÇÃO</div>', unsafe_allow_html=True)
     page = st.radio("Ferramentas", ["🏠 Início", "🔎 Localizar e separar PDFs", "🔗 Juntar PDFs",
                                     "🏷️ Analisar e renomear", "📋 Mesclar por planilha"], label_visibility="collapsed")
@@ -294,6 +310,11 @@ if page == "🏠 Início":
     a.metric("Ferramentas disponíveis", "04")
     b.metric("Formatos de saída", "PDF · ZIP · XLSX")
     c.metric("Modo de trabalho", "Na nuvem")
+    st.markdown("""<div class="df-benefits">
+      <div class="df-benefit"><strong>◈ Organize em lote</strong><span>Reduza o trabalho repetitivo com operações em vários documentos.</span></div>
+      <div class="df-benefit"><strong>◈ Confira resultados</strong><span>Relatórios em Excel ajudam a identificar arquivos não localizados.</span></div>
+      <div class="df-benefit"><strong>◈ Preserve originais</strong><span>As operações criam novos arquivos para download, sem alterar os enviados.</span></div>
+    </div>""", unsafe_allow_html=True)
     st.markdown('<div class="df-section">EXPLORAR FERRAMENTAS</div>', unsafe_allow_html=True)
     st.markdown("""<div class="df-grid"><div class="df-card"><span class="df-icon"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/><path d="M8 11h6M11 8v6"/></svg></span><h3>Localizar e separar</h3><p>Busque centenas de PDFs por nome ou planilha. Exporte os encontrados e um relatório de pendências.</p></div><div class="df-card"><span class="df-icon"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3v7a4 4 0 0 0 4 4h6"/><path d="m14 11 3 3-3 3"/><path d="M7 21v-3a4 4 0 0 1 4-4"/></svg></span><h3>Juntar documentos</h3><p>Combine um comprovante com várias notas, mantendo os arquivos originais intactos.</p></div><div class="df-card"><span class="df-icon"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h10l8 8-9 9-9-9z"/><circle cx="8" cy="9" r="1.5"/></svg></span><h3>Análise e nomes</h3><p>Extraia informações de PDFs textuais e gere sugestões de nomes para conferência.</p></div><div class="df-card"><span class="df-icon"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 9h16M10 9v12M4 15h16"/></svg></span><h3>Mesclar por planilha</h3><p>Relacione notas e comprovantes pela coluna NF e revise os casos ambíguos.</p></div></div>""", unsafe_allow_html=True)
     st.markdown('<div class="df-note"><b>Como começar:</b> escolha uma ferramenta no menu lateral. Para enviar uma pasta inteira de PDFs, compacte-a em ZIP e use <b>Localizar e separar PDFs</b>.</div>', unsafe_allow_html=True)
@@ -324,7 +345,7 @@ if page == "🏠 Início":
     st.caption("Projeto de portfólio • PDFs digitalizados sem texto selecionável ainda exigem OCR, não disponível nesta versão.")
 
 elif page == "🔎 Localizar e separar PDFs":
-    st.title("Localizar e separar PDFs")
+    st.markdown("""<section class="df-workspace-hero"><div class="df-eyebrow">PESQUISA INTELIGENTE</div><h1>Localizar e separar PDFs</h1><p>Encontre documentos por nome, número ou planilha e exporte tudo em um pacote organizado.</p></section>""", unsafe_allow_html=True)
     st.write("Envie uma pasta compactada (.zip) ou vários PDFs. Escolha os nomes ou números de uma planilha e baixe apenas os documentos correspondentes.")
     st.info("Exemplo: uma pasta com 200 PDFs + planilha com coluna NF contendo 1001, 1002 e 1003 → ZIP com os documentos encontrados e relatório dos faltantes.")
     source_zip = st.file_uploader("Pasta de origem (.zip) ou PDF", type=["zip","pdf"], key="find_zip")
@@ -383,7 +404,7 @@ elif page == "🔎 Localizar e separar PDFs":
                            file_name="docflow_documentos_separados.zip", mime="application/zip", type="primary")
 
 elif page == "🔗 Juntar PDFs":
-    st.title("Juntar comprovante e notas fiscais")
+    st.markdown("""<section class="df-workspace-hero"><div class="df-eyebrow">COMBINAÇÃO EM LOTE</div><h1>Juntar comprovante e notas fiscais</h1><p>Anexe um comprovante a cada nota fiscal, preservando os arquivos originais.</p></section>""", unsafe_allow_html=True)
     st.write("Cria um PDF para cada nota, colocando o mesmo comprovante antes da nota. Os originais não são alterados.")
     receipt = st.file_uploader("Comprovante de pagamento", type="pdf", key="receipt")
     invoices = st.file_uploader("Notas fiscais", type="pdf", accept_multiple_files=True, key="invoices")
@@ -408,7 +429,7 @@ elif page == "🔗 Juntar PDFs":
         st.download_button("📦 Baixar PDFs combinados e relatório", package, file_name="docflow_combinados.zip", mime="application/zip", type="primary")
 
 elif page == "🏷️ Analisar e renomear":
-    st.title("Analisar e sugerir nomes")
+    st.markdown("""<section class="df-workspace-hero"><div class="df-eyebrow">ANÁLISE DOCUMENTAL</div><h1>Analisar e sugerir nomes</h1><p>Identifique informações em PDFs textuais e gere sugestões de nomes para conferência.</p></section>""", unsafe_allow_html=True)
     st.write("Extrai campos de PDFs com texto selecionável e sugere nomes. Revise os resultados antes de utilizar.")
     uploads = st.file_uploader("Documentos PDF", type="pdf", accept_multiple_files=True, key="rename_files")
     if st.button("🏷️ Analisar documentos", type="primary"):
@@ -428,7 +449,7 @@ elif page == "🏷️ Analisar e renomear":
         st.download_button("📊 Baixar sugestões em Excel", report_bytes(rows), file_name="sugestoes_nomes.xlsx")
 
 elif page == "📋 Mesclar por planilha":
-    st.title("Mesclar documentos por planilha")
+    st.markdown("""<section class="df-workspace-hero"><div class="df-eyebrow">AUTOMAÇÃO COM EXCEL</div><h1>Mesclar documentos por planilha</h1><p>Relacione notas e comprovantes pelo número da NF e identifique casos que exigem revisão.</p></section>""", unsafe_allow_html=True)
     st.write("Associa notas e comprovantes pelo número da NF presente nos nomes dos PDFs. Casos ambíguos ficam para revisão.")
     excel = st.file_uploader("Planilha Excel (coluna NF)", type="xlsx", key="merge_excel")
     notes = st.file_uploader("Notas fiscais", type="pdf", accept_multiple_files=True, key="merge_notes")
