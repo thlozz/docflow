@@ -1,4 +1,4 @@
-"""DocFlow web interface — v0.5."""
+"""DocFlow web interface — v0.6."""
 from pathlib import Path
 import io
 import re
@@ -92,6 +92,54 @@ div[data-testid="stAlert"] {border-radius:13px}
 @media(prefers-reduced-motion:reduce) {.df-card,.df-step,.df-showcase,.df-end {animation:none!important;transition:none!important}}
 @media(max-width:850px) {.df-hero {padding-right:42%}.df-timeline {grid-template-columns:1fr}.df-showcase {grid-template-columns:1fr}}
 @media(max-width:650px) {.df-hero {min-height:410px;padding:30px 24px;justify-content:flex-start}.df-hero-art {top:auto;bottom:-65px;right:-55px;width:65%;height:230px;opacity:.55}.df-hero h1 {font-size:2rem!important}.df-showcase {padding:26px}.df-story {padding:30px 0 5px}}
+
+/* V0.6 — layered 3D document scene and progressive scroll narrative */
+.df-hero {isolation:isolate;min-height:430px}
+.df-scene {perspective:950px;transform-style:preserve-3d;overflow:visible}
+.df-glow {position:absolute;width:290px;height:290px;border-radius:50%;background:radial-gradient(circle,#fb718550,transparent 70%);filter:blur(22px);top:50%;left:50%;transform:translate(-50%,-50%)}
+.df-orbit {position:absolute;border:1px solid #fda4af45;border-radius:50%;width:320px;height:320px;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-25deg)}
+.df-orbit-two {width:245px;height:245px;border-style:dashed;border-color:#fb718575;animation:df-orbit 35s linear infinite}
+.df-document {position:absolute;box-sizing:border-box;width:172px;height:226px;top:50%;left:50%;border-radius:15px;padding:23px 20px;background:linear-gradient(145deg,#fff 0%,#f1f5f9 70%,#dbe4f0 100%);box-shadow:12px 25px 0 #11182740,22px 45px 48px #03071280,inset -5px -5px 15px #94a3b825;display:flex;flex-direction:column;gap:13px;transform-style:preserve-3d;backface-visibility:hidden}
+.df-document-back {transform:translate(-90%,-61%) rotate(-16deg) rotateY(-22deg) rotateX(8deg);animation:df-float-back 6s ease-in-out infinite}
+.df-document-front {transform:translate(-8%,-39%) rotate(11deg) rotateY(-17deg) rotateX(6deg);animation:df-float-front 7s ease-in-out infinite;background:linear-gradient(145deg,#fff 0%,#fff0f2 74%,#fecdd3 100%)}
+.df-doc-top {display:block;width:54%;height:11px;background:#e11d48;border-radius:5px;margin-bottom:5px}
+.df-doc-line {display:block;width:90%;height:6px;background:#cbd5e1;border-radius:5px}
+.df-doc-line.short {width:64%}
+.df-doc-chart {display:block;width:100%;height:62px;border-radius:10px;background:linear-gradient(135deg,#ffe4e6,#fda4af55);position:relative}
+.df-doc-chart:after {content:"";position:absolute;inset:17px 15px;border-bottom:4px solid #e11d48;border-right:4px solid #e11d48;transform:skew(-20deg) rotate(-8deg);border-radius:3px}
+.df-doc-check {position:absolute;bottom:23px;right:17px;width:39px;height:39px;border-radius:50%;display:grid;place-items:center;background:#dcfce7;color:#16a34a;font-size:24px;font-weight:800;box-shadow:0 6px 15px #14532d30}
+.df-float {position:absolute;display:grid;place-items:center;border:1px solid #ffffff40;backdrop-filter:blur(14px);box-shadow:0 12px 28px #03071270;color:white;font-weight:800}
+.df-float-one {top:13%;right:16%;border-radius:12px;width:65px;height:48px;background:linear-gradient(145deg,#fb7185,#be123c);transform:rotate(13deg);animation:df-bob 4s ease-in-out infinite}
+.df-float-two {bottom:10%;left:13%;border-radius:50%;width:53px;height:53px;background:linear-gradient(145deg,#34d399,#047857);font-size:26px;animation:df-bob 5s ease-in-out -2s infinite}
+@keyframes df-float-back {0%,100%{transform:translate(-90%,-61%) rotate(-16deg) rotateY(-22deg) rotateX(8deg)}50%{transform:translate(-90%,-68%) rotate(-12deg) rotateY(-14deg) rotateX(13deg)}}
+@keyframes df-float-front {0%,100%{transform:translate(-8%,-39%) rotate(11deg) rotateY(-17deg) rotateX(6deg)}50%{transform:translate(-8%,-46%) rotate(8deg) rotateY(-8deg) rotateX(10deg)}}
+@keyframes df-bob {0%,100%{translate:0 0}50%{translate:0 -15px}}
+@keyframes df-orbit {to{transform:translate(-50%,-50%) rotate(335deg)}}
+.df-scroll-progress {height:4px;background:linear-gradient(90deg,#e11d48,#fb7185);width:0%;position:sticky;top:0;z-index:10;border-radius:5px;box-shadow:0 1px 10px #fb718580}
+.df-story {position:relative}
+.df-timeline:before {content:"";position:absolute;height:3px;left:12%;right:12%;top:42px;background:linear-gradient(90deg,#fecdd3,#e11d48,#fecdd3);opacity:.6}
+.df-step {z-index:1;transition:transform .3s ease,box-shadow .3s ease}
+.df-step:hover {transform:translateY(-7px);box-shadow:0 18px 40px #11182715}
+.df-step-number {background:#fff1f2;border:1px solid #fecdd3;border-radius:20px;padding:8px 13px}
+.df-showcase {position:relative;background:radial-gradient(circle at 80% 25%,#be123c40,transparent 35%),linear-gradient(115deg,#0f172a,#20243b);min-height:350px}
+.df-preview {transform:perspective(850px) rotateY(-11deg) rotateX(4deg) rotateZ(2deg);transition:transform .5s ease,box-shadow .5s ease}
+.df-showcase:hover .df-preview {transform:perspective(850px) rotateY(0deg) rotateX(0deg) rotateZ(0deg);box-shadow:0 24px 48px #0007}
+.df-end {background:linear-gradient(180deg,#fff,#fff1f2);border:1px solid #ffe4e6;border-radius:22px;margin-bottom:24px}
+@supports (animation-timeline: scroll()) {
+ .df-scroll-progress {animation:df-progress linear both;animation-timeline:scroll(root block)}
+ @keyframes df-progress {to{width:100%}}
+}
+@supports (animation-timeline: view()) {
+ .df-story-title,.df-story-subtitle,.df-step,.df-showcase,.df-end {animation:df-rise linear both;animation-timeline:view(block);animation-range:entry 0% entry 75%}
+ .df-step:nth-child(2) {animation-range:entry 10% entry 85%}
+ .df-step:nth-child(3) {animation-range:entry 20% entry 95%}
+ .df-preview {animation:df-preview-in linear both;animation-timeline:view(block);animation-range:entry 0% cover 50%}
+ @keyframes df-rise {from{opacity:.15;translate:0 65px;filter:blur(5px)}to{opacity:1;translate:0 0;filter:blur(0)}}
+ @keyframes df-preview-in {from{opacity:.3;translate:50px 25px}to{opacity:1;translate:0 0}}
+}
+@media(max-width:850px) {.df-hero {padding-right:40%}.df-scene {width:45%}.df-document {scale:.82}.df-orbit {scale:.8}}
+@media(max-width:650px) {.df-hero {min-height:450px;padding-right:24px}.df-scene {width:78%;height:245px;right:-18%;bottom:-68px;top:auto;opacity:.56}.df-document {scale:.7}.df-timeline:before {display:none}.df-showcase {min-height:0}}
+@media(prefers-reduced-motion:reduce) {.df-document,.df-float,.df-orbit,.df-scroll-progress,.df-story-title,.df-story-subtitle,.df-step,.df-showcase,.df-end,.df-preview {animation:none!important;transition:none!important;filter:none!important}.df-scroll-progress {width:100%}}
 </style>""", unsafe_allow_html=True)
 
 MAX_FILES = 1200
@@ -224,24 +272,23 @@ def output_actions(rows, output_dir=None, key="output"):
 
 with st.sidebar:
     st.markdown('<div class="df-brand"><span class="df-logo">◈</span> DocFlow</div>', unsafe_allow_html=True)
-    st.caption("WORKSPACE / V0.5")
+    st.caption("WORKSPACE / V0.6")
     st.markdown('<div class="df-section" style="color:#94a3b8">NAVEGAÇÃO</div>', unsafe_allow_html=True)
     page = st.radio("Ferramentas", ["🏠 Início", "🔎 Localizar e separar PDFs", "🔗 Juntar PDFs",
                                     "🏷️ Analisar e renomear", "📋 Mesclar por planilha"], label_visibility="collapsed")
     st.markdown('<div class="df-sidebar-note">🔒 <b>Privacidade primeiro</b><div style="margin-top:7px">Use documentos fictícios ou autorizados. Os arquivos são processados temporariamente.</div></div>', unsafe_allow_html=True)
 
 if page == "🏠 Início":
-    st.markdown("""<section class="df-hero">
+    st.markdown("""<div class="df-scroll-progress" aria-hidden="true"></div><section class="df-hero">
       <div class="df-eyebrow">DOCUMENT WORKSPACE · V0.5</div>
       <h1>Menos tarefas repetitivas.<br>Mais tempo para o que importa.</h1>
-      <p>Seu centro de automação documental. Encontre, organize e combine PDFs em lote com relatórios para cada operação.</p>\n      <div class="df-scroll-hint">↓ EXPLORE A EXPERIÊNCIA</div><div class="df-hero-art"><svg viewBox="0 0 390 360" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-<defs><linearGradient id="sheetA" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#cbd5e1"/></linearGradient><linearGradient id="sheetB" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fb7185"/><stop offset="1" stop-color="#be123c"/></linearGradient></defs>
-<circle cx="202" cy="175" r="142" fill="none" stroke="#fda4af" stroke-opacity=".15" stroke-dasharray="6 11" stroke-width="2"/>
-<circle cx="202" cy="175" r="111" fill="#fb7185" fill-opacity=".07"/>
-<g transform="translate(63 58) rotate(-13 90 120)"><rect x="15" y="15" width="176" height="230" rx="15" fill="#475569"/><rect x="0" y="0" width="176" height="230" rx="15" fill="url(#sheetA)"/><rect x="22" y="30" width="58" height="10" rx="5" fill="#e11d48"/><rect x="22" y="57" width="126" height="6" rx="3" fill="#94a3b8"/><rect x="22" y="73" width="112" height="6" rx="3" fill="#cbd5e1"/><rect x="22" y="105" width="132" height="66" rx="9" fill="#e2e8f0"/><path d="M39 149l28-23 20 13 31-28 21 18" fill="none" stroke="#e11d48" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><rect x="22" y="193" width="90" height="7" rx="3" fill="#94a3b8"/></g>
-<g transform="translate(182 111) rotate(12 80 105)"><rect x="0" y="0" width="154" height="200" rx="14" fill="url(#sheetB)"/><rect x="17" y="20" width="120" height="160" rx="8" fill="#fff" fill-opacity=".96"/><rect x="34" y="40" width="72" height="9" rx="4" fill="#e11d48"/><rect x="34" y="67" width="86" height="6" rx="3" fill="#94a3b8"/><rect x="34" y="84" width="75" height="6" rx="3" fill="#cbd5e1"/><circle cx="77" cy="132" r="24" fill="#dcfce7"/><path d="m65 132 9 9 18-19" fill="none" stroke="#16a34a" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></g>
-<circle cx="323" cy="62" r="9" fill="#fb7185"/><circle cx="45" cy="255" r="6" fill="#fda4af"/><path d="m334 265 9 9 18-18" stroke="#fda4af" stroke-width="5" fill="none" stroke-linecap="round"/>
-</svg></div>
+      <p>Seu centro de automação documental. Encontre, organize e combine PDFs em lote com relatórios para cada operação.</p>\n      <div class="df-scroll-hint">↓ EXPLORE A EXPERIÊNCIA</div><div class="df-hero-art df-scene" aria-hidden="true">
+<div class="df-orbit df-orbit-one"></div><div class="df-orbit df-orbit-two"></div>
+<div class="df-glow"></div>
+<div class="df-document df-document-back"><span class="df-doc-top"></span><span class="df-doc-line"></span><span class="df-doc-line short"></span><span class="df-doc-chart"></span><span class="df-doc-line"></span></div>
+<div class="df-document df-document-front"><span class="df-doc-top"></span><span class="df-doc-line"></span><span class="df-doc-line short"></span><span class="df-doc-chart"></span><span class="df-doc-line"></span><span class="df-doc-check">✓</span></div>
+<div class="df-float df-float-one">PDF</div><div class="df-float df-float-two">✓</div>
+</div>
     </section>""", unsafe_allow_html=True)
     a,b,c = st.columns(3)
     a.metric("Ferramentas disponíveis", "04")
