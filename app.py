@@ -1,4 +1,4 @@
-"""DocFlow web interface — v0.2."""
+"""DocFlow web interface — v0.4."""
 from pathlib import Path
 import io
 import re
@@ -46,7 +46,7 @@ div[data-testid="stAlert"] {border-radius:13px}
 .df-hero p {color:#cbd5e1;max-width:620px;font-size:1.03rem;margin:0}
 .df-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:12px 0 28px}
 .df-card {background:white;border:1px solid #e8eaf0;border-radius:18px;padding:24px;min-height:158px;box-shadow:0 8px 25px rgba(15,23,42,.035)}
-.df-card .df-icon {display:inline-flex;background:#fff1f2;color:#be123c;border-radius:12px;padding:9px 12px;font-size:1.25rem;margin-bottom:14px}
+.df-card .df-icon {display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(145deg,#fff1f2,#ffe4e6);color:#be123c;border-radius:14px;padding:12px;margin-bottom:14px;box-shadow:inset 0 1px 0 #fff}.df-card:hover {transform:translateY(-3px);box-shadow:0 16px 36px rgba(15,23,42,.08);border-color:#fecdd3}.df-card {transition:transform .18s,box-shadow .18s,border-color .18s}
 .df-card h3 {font-size:1.12rem;margin:0 0 7px;font-weight:800}
 .df-card p {color:#64748b;margin:0;font-size:.92rem}
 .df-section {font-size:.75rem;color:#64748b;font-weight:800;letter-spacing:.12em;text-transform:uppercase;margin:25px 0 12px}
@@ -187,7 +187,7 @@ def output_actions(rows, output_dir=None, key="output"):
 
 with st.sidebar:
     st.markdown('<div class="df-brand"><span class="df-logo">◈</span> DocFlow</div>', unsafe_allow_html=True)
-    st.caption("WORKSPACE / V0.3")
+    st.caption("WORKSPACE / V0.4")
     st.markdown('<div class="df-section" style="color:#94a3b8">NAVEGAÇÃO</div>', unsafe_allow_html=True)
     page = st.radio("Ferramentas", ["🏠 Início", "🔎 Localizar e separar PDFs", "🔗 Juntar PDFs",
                                     "🏷️ Analisar e renomear", "📋 Mesclar por planilha"], label_visibility="collapsed")
@@ -195,7 +195,7 @@ with st.sidebar:
 
 if page == "🏠 Início":
     st.markdown("""<section class="df-hero">
-      <div class="df-eyebrow">DOCUMENT WORKSPACE · V0.3</div>
+      <div class="df-eyebrow">DOCUMENT WORKSPACE · V0.4</div>
       <h1>Menos tarefas repetitivas.<br>Mais tempo para o que importa.</h1>
       <p>Seu centro de automação documental. Encontre, organize e combine PDFs em lote com relatórios para cada operação.</p>
     </section>""", unsafe_allow_html=True)
@@ -204,12 +204,7 @@ if page == "🏠 Início":
     b.metric("Formatos de saída", "PDF · ZIP · XLSX")
     c.metric("Modo de trabalho", "Na nuvem")
     st.markdown('<div class="df-section">EXPLORAR FERRAMENTAS</div>', unsafe_allow_html=True)
-    st.markdown("""<div class="df-grid">
-      <div class="df-card"><span class="df-icon">🔎</span><h3>Localizar e separar</h3><p>Busque centenas de PDFs por nome ou planilha. Exporte os encontrados e um relatório de pendências.</p></div>
-      <div class="df-card"><span class="df-icon">🔗</span><h3>Juntar documentos</h3><p>Combine um comprovante com várias notas, mantendo os arquivos originais intactos.</p></div>
-      <div class="df-card"><span class="df-icon">🏷️</span><h3>Análise e nomes</h3><p>Extraia informações de PDFs textuais e gere sugestões de nomes para conferência.</p></div>
-      <div class="df-card"><span class="df-icon">📋</span><h3>Mesclar por planilha</h3><p>Relacione notas e comprovantes pela coluna NF e revise os casos ambíguos.</p></div>
-    </div>""", unsafe_allow_html=True)
+    st.markdown("""<div class="df-grid"><div class="df-card"><span class="df-icon"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/><path d="M8 11h6M11 8v6"/></svg></span><h3>Localizar e separar</h3><p>Busque centenas de PDFs por nome ou planilha. Exporte os encontrados e um relatório de pendências.</p></div><div class="df-card"><span class="df-icon"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3v7a4 4 0 0 0 4 4h6"/><path d="m14 11 3 3-3 3"/><path d="M7 21v-3a4 4 0 0 1 4-4"/></svg></span><h3>Juntar documentos</h3><p>Combine um comprovante com várias notas, mantendo os arquivos originais intactos.</p></div><div class="df-card"><span class="df-icon"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h10l8 8-9 9-9-9z"/><circle cx="8" cy="9" r="1.5"/></svg></span><h3>Análise e nomes</h3><p>Extraia informações de PDFs textuais e gere sugestões de nomes para conferência.</p></div><div class="df-card"><span class="df-icon"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 9h16M10 9v12M4 15h16"/></svg></span><h3>Mesclar por planilha</h3><p>Relacione notas e comprovantes pela coluna NF e revise os casos ambíguos.</p></div></div>""", unsafe_allow_html=True)
     st.markdown('<div class="df-note"><b>Como começar:</b> escolha uma ferramenta no menu lateral. Para enviar uma pasta inteira de PDFs, compacte-a em ZIP e use <b>Localizar e separar PDFs</b>.</div>', unsafe_allow_html=True)
     st.caption("Projeto de portfólio • PDFs digitalizados sem texto selecionável ainda exigem OCR, não disponível nesta versão.")
 
