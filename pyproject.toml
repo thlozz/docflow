@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "docflow-document-automation"
+version = "0.1.0"
+description = "Automação de PDFs e planilhas para prestação de contas"
+requires-python = ">=3.10"
+dependencies = ["pypdf>=4,<7", "openpyxl>=3.1,<4"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
