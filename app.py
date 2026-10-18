@@ -374,7 +374,7 @@ elif page == "🔎 Localizar e separar PDFs":
     st.markdown("""<section class="df-workspace-hero"><div class="df-eyebrow">PESQUISA INTELIGENTE</div><h1>Localizar e separar PDFs</h1><p>Encontre documentos por nome, número ou planilha e exporte tudo em um pacote organizado.</p></section>""", unsafe_allow_html=True)
     st.write("Envie uma pasta compactada (.zip) ou vários PDFs. Escolha os nomes ou números de uma planilha e baixe apenas os documentos correspondentes.")
     st.info("Exemplo: uma pasta com 200 PDFs + planilha com coluna NF contendo 1001, 1002 e 1003 → ZIP com os documentos encontrados e relatório dos faltantes.")
-    st.markdown('<div class="df-utility-head">ÁREA DE TRABALHO <span class="df-status">PROCESSAMENTO LOCAL NA SESSÃO</span></div>', unsafe_allow_html=True)
+    st.markdown('<div class="df-utility-head">ÁREA DE TRABALHO <span class="df-status">PROCESSAMENTO TEMPORÁRIO</span></div>', unsafe_allow_html=True)
     source_zip = st.file_uploader("Pasta de origem (.zip) ou PDF", type=["zip","pdf"], key="find_zip")
     uploads = st.file_uploader("Ou selecione vários PDFs", type=["pdf"], accept_multiple_files=True, key="find_multiple")
     mode = st.radio("Como deseja localizar?", ["Nome / lista", "Planilha Excel"], horizontal=True)
@@ -433,7 +433,7 @@ elif page == "🔎 Localizar e separar PDFs":
 elif page == "🔗 Juntar PDFs":
     st.markdown("""<section class="df-workspace-hero"><div class="df-eyebrow">COMBINAÇÃO EM LOTE</div><h1>Juntar comprovante e notas fiscais</h1><p>Anexe um comprovante a cada nota fiscal, preservando os arquivos originais.</p></section>""", unsafe_allow_html=True)
     st.write("Cria um PDF para cada nota, colocando o mesmo comprovante antes da nota. Os originais não são alterados.")
-    st.markdown('<div class="df-utility-head">ÁREA DE TRABALHO <span class="df-status">PROCESSAMENTO LOCAL NA SESSÃO</span></div>', unsafe_allow_html=True)
+    st.markdown('<div class="df-utility-head">ÁREA DE TRABALHO <span class="df-status">PROCESSAMENTO TEMPORÁRIO</span></div>', unsafe_allow_html=True)
     receipt = st.file_uploader("Comprovante de pagamento", type="pdf", key="receipt")
     invoices = st.file_uploader("Notas fiscais", type="pdf", accept_multiple_files=True, key="invoices")
     if st.button("🔗 Combinar documentos", type="primary"):
@@ -459,7 +459,7 @@ elif page == "🔗 Juntar PDFs":
 elif page == "🏷️ Analisar e renomear":
     st.markdown("""<section class="df-workspace-hero"><div class="df-eyebrow">ANÁLISE DOCUMENTAL</div><h1>Analisar e sugerir nomes</h1><p>Identifique informações em PDFs textuais e gere sugestões de nomes para conferência.</p></section>""", unsafe_allow_html=True)
     st.write("Extrai campos de PDFs com texto selecionável e sugere nomes. Revise os resultados antes de utilizar.")
-    st.markdown('<div class="df-utility-head">ÁREA DE TRABALHO <span class="df-status">PROCESSAMENTO LOCAL NA SESSÃO</span></div>', unsafe_allow_html=True)
+    st.markdown('<div class="df-utility-head">ÁREA DE TRABALHO <span class="df-status">PROCESSAMENTO TEMPORÁRIO</span></div>', unsafe_allow_html=True)
     uploads = st.file_uploader("Documentos PDF", type="pdf", accept_multiple_files=True, key="rename_files")
     if st.button("🏷️ Analisar documentos", type="primary"):
         if not uploads:
@@ -480,7 +480,7 @@ elif page == "🏷️ Analisar e renomear":
 elif page == "📋 Mesclar por planilha":
     st.markdown("""<section class="df-workspace-hero"><div class="df-eyebrow">AUTOMAÇÃO COM EXCEL</div><h1>Mesclar documentos por planilha</h1><p>Relacione notas e comprovantes pelo número da NF e identifique casos que exigem revisão.</p></section>""", unsafe_allow_html=True)
     st.write("Associa notas e comprovantes pelo número da NF presente nos nomes dos PDFs. Casos ambíguos ficam para revisão.")
-    st.markdown('<div class="df-utility-head">ÁREA DE TRABALHO <span class="df-status">PROCESSAMENTO LOCAL NA SESSÃO</span></div>', unsafe_allow_html=True)
+    st.markdown('<div class="df-utility-head">ÁREA DE TRABALHO <span class="df-status">PROCESSAMENTO TEMPORÁRIO</span></div>', unsafe_allow_html=True)
     excel = st.file_uploader("Planilha Excel (coluna NF)", type="xlsx", key="merge_excel")
     notes = st.file_uploader("Notas fiscais", type="pdf", accept_multiple_files=True, key="merge_notes")
     proofs = st.file_uploader("Comprovantes", type="pdf", accept_multiple_files=True, key="merge_proofs")
