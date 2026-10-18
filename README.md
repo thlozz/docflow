@@ -1,33 +1,34 @@
-# DocFlow — Automação de documentos para prestação de contas
+# DocFlow — automação de documentos
 
-Aplicativo em **Python + Streamlit** para organizar PDFs, relacionar notas fiscais e comprovantes de pagamento e gerar relatórios Excel.
+Aplicação web em **Python + Streamlit**, reconstruída a partir de automações de prestação de contas. Versão **0.2**.
 
-> Projeto de portfólio reconstruído em 2026 a partir de automações administrativas desenvolvidas em 2025. Não é um produto fiscal homologado, nem realiza validação tributária de notas fiscais.
+## Ferramentas
 
-## Funcionalidades (v0.1)
+- **Localizar e separar PDFs:** envie uma pasta compactada em ZIP (com subpastas, se quiser) ou vários PDFs. Busque por uma lista de nomes/números ou pela coluna de uma planilha Excel. Baixe um ZIP contendo **encontrados/** e **relatorio.xlsx**, inclusive os termos não encontrados.
+- **Juntar PDFs:** coloca um comprovante antes de cada nota selecionada, criando arquivos separados.
+- **Analisar e renomear:** sugere nomes com número da NF e valor extraídos de PDFs com texto selecionável. Não renomeia originais.
+- **Mesclar por planilha:** relaciona PDFs de notas e comprovantes pelo número da NF nos nomes. Ambiguidades ficam para revisão.
 
-- **Juntar PDFs em lote:** adiciona um comprovante antes de cada nota fiscal selecionada, sem alterar os originais.
-- **Buscar PDFs:** pesquisa por nome, ano e texto selecionável contido nos arquivos.
-- **Analisar / sugerir renomeação:** tenta identificar número de nota, CNPJ e valor via padrões textuais. Exige conferência humana; não altera os arquivos originais.
-- **Mesclar por planilha:** lê a coluna `NF` de um Excel, associa notas e comprovantes cujos nomes contenham o mesmo número, e marca casos ambíguos para revisão.
-- **Relatórios:** exporta Excel com status, detalhes e caminhos de saída; os PDFs gerados são baixados em ZIP.
+## Como usar a separação por planilha
 
-## Instalação
+1. Compacte a pasta de PDFs em um arquivo `.zip` (no Chromebook, pelo app Arquivos).
+2. Na aba **Localizar e separar PDFs**, envie o ZIP.
+3. Escolha **Planilha Excel** e envie um `.xlsx` com a coluna `NF` (ou informe outro cabeçalho).
+4. Clique **Localizar e separar**.
+5. Baixe o ZIP com os PDFs encontrados e o relatório dos não encontrados.
+
+Alternativamente, selecione **Nome / lista** e digite os nomes ou números, um por linha.
+
+**Importante:** em uma aplicação hospedada na nuvem não é possível acessar livremente as pastas locais do usuário. O ZIP funciona como a pasta de origem e o ZIP de resultado como a pasta separada.
+
+## Executar localmente
 
 Requer Python 3.10+.
 
 ```bash
-python -m venv .venv
-# Windows:
-.venv\Scripts\activate
-# macOS / Linux:
-# source .venv/bin/activate
 python -m pip install -r requirements.txt
-python -m pip install -e .
 python -m streamlit run app.py
 ```
-
-Acesse a URL local exibida no terminal.
 
 ## Testes
 
@@ -38,34 +39,23 @@ python -m pytest -q
 
 ## Estrutura
 
-```text
-app.py                   # interface web
-src/docflow/core.py      # regras de processamento, independentes da interface
-tests/test_core.py       # testes de operações e ambiguidades
-examples/                # dados sintéticos para demonstração
-```
+- `app.py`: interface e fluxo de upload/exportação
+- `src/docflow/core.py`: funções de processamento
+- `tests/`: testes automatizados
+- `examples/`: documentos fictícios de demonstração
 
-## Limitações conhecidas
+## Limitações e privacidade
 
-- PDFs digitalizados sem camada de texto **não são lidos por OCR** nesta versão.
-- A extração de valores e números usa expressões regulares; diferentes layouts podem produzir erros ou campos vazios.
-- A mesclagem por planilha é baseada em **número presente no nome do arquivo**, não em verificação fiscal completa. Quando houver múltiplos candidatos, não faz combinação automática.
-- A busca por ano considera o ano no nome/caminho (ou no texto quando a busca por conteúdo estiver ativa); não infere a competência fiscal.
-- A interface trabalha com uploads e downloads temporários, não acessa pastas locais arbitrárias no servidor.
-- Para dados sensíveis, utilize ambiente local e siga as políticas de privacidade aplicáveis.
+- Não há OCR para PDFs escaneados sem texto selecionável.
+- Busca por nome é aproximada para texto e delimitada por números para evitar coincidências como 1001 dentro de 11001.
+- A busca no conteúdo pode encontrar um número em qualquer contexto; confira os resultados.
+- Mesclagem por planilha exige identificação da NF nos nomes dos arquivos e não verifica pagamentos.
+- A extração de campos usa padrões e pode falhar com diferentes layouts.
+- Arquivos enviados são processados temporariamente no servidor; **não envie documentos empresariais sigilosos à demonstração pública**.
+- Esta aplicação não é um produto fiscal homologado.
 
-## Próximos passos
+## Próximas melhorias
 
-1. OCR opcional com Tesseract para PDFs digitalizados.
-2. Identificação de notas e comprovantes com múltiplos critérios (CNPJ, valor, data, número).
-3. Pré-visualização e confirmação manual de renomeações.
-4. Autenticação e armazenamento seguro, se houver necessidade de uso multiusuário.
-5. Demonstração em vídeo e capturas de tela com dados fictícios.
+OCR opcional, correspondência por fornecedor/valor/data, prévia e confirmação manual das renomeações, testes de integração da interface e melhorias de acessibilidade.
 
-## Origem do projeto
-
-Inspirado em scripts de automação usados para reduzir tarefas repetitivas de prestação de contas em 2025. A implementação pública usa apenas exemplos sintéticos e código reconstruído, sem arquivos ou informações de terceiros.
-
-## Licença
-
-MIT — consulte `LICENSE`.
+MIT License.
