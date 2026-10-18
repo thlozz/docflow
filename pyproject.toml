@@ -10,7 +10,7 @@ requires-python = ">=3.10"
 dependencies = ["pypdf>=4,<7", "openpyxl>=3.1,<4"]
 
 [project.optional-dependencies]
-dev = ["pytest>=8"]
+dev = ["pytest>=8", "reportlab>=4,<5"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
