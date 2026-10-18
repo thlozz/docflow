@@ -1,94 +1,305 @@
+"""DocFlow web interface — v0.2."""
 from pathlib import Path
+import io
+import re
 import tempfile
 import zipfile
-import io
+
 import streamlit as st
-from docflow.core import (merge_receipt_to_many, search_pdfs, rename_suggestions,
-                          export_report, match_by_spreadsheet, Result)
+from openpyxl import load_workbook
 
-st.set_page_config(page_title='DocFlow', page_icon='📄', layout='wide')
-st.title('DocFlow')
-st.caption('Automação de documentos • PDFs • Prestação de contas')
-st.info('Projeto demonstrativo. Use documentos fictícios ou autorizados. Arquivos são processados temporariamente nesta sessão.')
+from docflow.core import (
+    Result, clean_name, export_report, match_by_spreadsheet,
+    merge_receipt_to_many, normalize, pdfs, read_pdf, rename_suggestions,
+)
 
-def store(upload, folder):
-    path = folder / Path(upload.name).name
+st.set_page_config(page_title="DocFlow | Automação de documentos", page_icon="📁", layout="wide", initial_sidebar_state="expanded")
+st.markdown("""<style>
+:root {color-scheme:light}
+.block-container {padding-top:2rem;max-width:1250px}
+h1,h2,h3 {letter-spacing:-.035em}
+[data-testid="stSidebar"] {background:#111827}
+[data-testid="stSidebar"] * {color:#f9fafb}
+[data-testid="stMetric"] {border:1px solid #e5e7eb;border-radius:14px;padding:15px;background:#fff}
+.stButton>button[kind="primary"],[data-testid="stDownloadButton"] button[kind="primary"] {background:#b91c1c;border-color:#b91c1c;color:white}
+.stButton>button[kind="primary"]:hover {background:#991b1b;border-color:#991b1b}
+div[data-testid="stAlert"] {border-radius:12px}
+</style>""", unsafe_allow_html=True)
+
+MAX_FILES = 1200
+MAX_UNCOMPRESSED = 250 * 1024 * 1024
+
+def persist_upload(upload, folder):
+    name = Path(upload.name).name
+    if not name or name in (".", ".."):
+        raise ValueError("Nome de arquivo inválido.")
+    path = folder / name
+    if path.exists():
+        raise ValueError(f"Arquivo duplicado: {name}")
     path.write_bytes(upload.getvalue())
     return path
 
-def report_download(results):
-    with tempfile.TemporaryDirectory() as temp:
-        path = export_report(results, Path(temp) / 'relatorio.xlsx')
-        st.download_button('Baixar relatório Excel', path.read_bytes(), 'relatorio_docflow.xlsx',
-                           mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+def receive_pdfs(uploaded, target):
+    target.mkdir(parents=True, exist_ok=True)
+    if uploaded is None:
+        return 0
+    if uploaded.name.lower().endswith(".zip"):
+        with zipfile.ZipFile(io.BytesIO(uploaded.getvalue())) as archive:
+            entries = [entry for entry in archive.infolist() if not entry.is_dir() and entry.filename.lower().endswith(".pdf")]
+            if len(entries) > MAX_FILES or sum(e.file_size for e in entries) > MAX_UNCOMPRESSED:
+                raise ValueError("ZIP muito grande. Limite: 1.200 PDFs e 250 MB descompactados.")
+            seen = set()
+            for entry in entries:
+                parts = Path(entry.filename.replace("\\", "/")).parts
+                if ".." in parts or entry.filename.startswith("/"):
+                    raise ValueError("O ZIP contém um caminho inválido.")
+                # Preserve a safe hierarchy, avoiding path traversal.
+                parts = [clean_name(part) for part in parts]
+                relative = Path(*parts)
+                if str(relative).casefold() in seen:
+                    raise ValueError("O ZIP contém nomes duplicados.")
+                seen.add(str(relative).casefold())
+                destination = target / relative
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                with archive.open(entry) as source, destination.open("wb") as output:
+                    while chunk := source.read(1024 * 1024):
+                        output.write(chunk)
+            return len(entries)
+    if uploaded.name.lower().endswith(".pdf"):
+        persist_upload(uploaded, target)
+        return 1
+    raise ValueError("Envie um arquivo ZIP ou PDF.")
 
-def show_results(results):
-    st.dataframe([vars(r) for r in results], use_container_width=True)
-    report_download(results)
+def collect_inputs(single, multiple, folder):
+    count = receive_pdfs(single, folder) if single else 0
+    for upload in multiple or []:
+        count += receive_pdfs(upload, folder)
+    return count
 
-def download_zip(folder):
-    data = io.BytesIO()
-    with zipfile.ZipFile(data, 'w', zipfile.ZIP_DEFLATED) as z:
-        for file in sorted(folder.glob('*.pdf')): z.write(file, arcname=file.name)
-    st.download_button('Baixar PDFs processados (ZIP)', data.getvalue(), 'docflow_resultados.zip', 'application/zip')
+def get_terms(mode, text_value, spreadsheet, column):
+    if mode == "Nome / lista":
+        terms = [line.strip() for line in re.split(r"[,;\n]+", text_value) if line.strip()]
+    else:
+        if spreadsheet is None:
+            raise ValueError("Envie uma planilha Excel.")
+        wb = load_workbook(io.BytesIO(spreadsheet.getvalue()), read_only=True, data_only=True)
+        try:
+            rows = wb.active.iter_rows(values_only=True)
+            headers = [normalize(str(v or "")) for v in next(rows, ())]
+            key = normalize(column)
+            if key not in headers:
+                raise ValueError(f"Coluna '{column}' não encontrada. Colunas disponíveis: {', '.join(headers)}")
+            idx = headers.index(key)
+            terms = [str(row[idx]).strip().removesuffix(".0") for row in rows if len(row) > idx and row[idx] is not None]
+        finally:
+            wb.close()
+    terms = list(dict.fromkeys(t for t in terms if t))
+    if not terms:
+        raise ValueError("Informe pelo menos um nome ou número para localizar.")
+    if len(terms) > 2000:
+        raise ValueError("Máximo de 2.000 termos por busca.")
+    return terms
 
-tab_merge, tab_search, tab_rename, tab_excel = st.tabs(['Juntar PDFs', 'Buscar PDFs', 'Analisar / Renomear', 'Mesclar por planilha'])
-with tab_merge:
-    st.subheader('Adicionar um comprovante antes de várias notas fiscais')
-    receipt = st.file_uploader('Comprovante', type='pdf', key='receipt')
-    invoices = st.file_uploader('Notas fiscais', type='pdf', accept_multiple_files=True, key='invoices')
-    if st.button('Processar PDFs', type='primary', key='merge'):
-        if not receipt or not invoices: st.warning('Envie um comprovante e ao menos uma nota.')
+def matches(term, file, content, text_cache):
+    filename = normalize(file.stem)
+    wanted = normalize(term)
+    if not wanted:
+        return False
+    # Numeric IDs must not match part of another number (NF 1001 != 11001).
+    if wanted.isdigit():
+        pattern = r"(?<!\d)" + re.escape(wanted) + r"(?!\d)"
+        if re.search(pattern, filename):
+            return True
+    elif wanted in filename:
+        return True
+    if content:
+        if file not in text_cache:
+            text_cache[file] = normalize(read_pdf(file))
+        body = text_cache[file]
+        if wanted.isdigit():
+            return bool(re.search(r"(?<!\d)" + re.escape(wanted) + r"(?!\d)", body))
+        return wanted in body
+    return False
+
+def package_results(rows, found_files, source_root, extra_files=None):
+    output = io.BytesIO()
+    with zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED) as archive:
+        for file in sorted(found_files):
+            archive.write(file, arcname=str(Path("encontrados") / file.relative_to(source_root)))
+        for name, payload in (extra_files or {}).items():
+            archive.writestr(name, payload)
+        with tempfile.TemporaryDirectory() as tmp:
+            report = export_report(rows, Path(tmp) / "relatorio.xlsx")
+            archive.write(report, arcname="relatorio.xlsx")
+    return output.getvalue()
+
+def report_bytes(rows):
+    with tempfile.TemporaryDirectory() as tmp:
+        return export_report(rows, Path(tmp) / "relatorio.xlsx").read_bytes()
+
+def result_table(rows):
+    st.dataframe([{"Arquivo / termo":r.source,"Status":r.status,"Detalhes":r.detail,"Saída":r.output} for r in rows],
+                 use_container_width=True, hide_index=True)
+
+def output_actions(rows, output_dir=None, key="output"):
+    result_table(rows)
+    st.download_button("📊 Baixar relatório Excel", report_bytes(rows), file_name="relatorio_docflow.xlsx",
+                       mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", key=f"{key}_excel")
+    if output_dir is not None:
+        stream = io.BytesIO()
+        with zipfile.ZipFile(stream, "w", zipfile.ZIP_DEFLATED) as archive:
+            for file in sorted(pdfs(output_dir)):
+                archive.write(file, arcname=str(file.relative_to(output_dir)))
+        if pdfs(output_dir):
+            st.download_button("📦 Baixar PDFs processados", stream.getvalue(), file_name="docflow_processados.zip",
+                               mime="application/zip", key=f"{key}_zip")
+
+with st.sidebar:
+    st.title("📁 DocFlow")
+    st.caption("AUTOMAÇÃO DOCUMENTAL • V0.2")
+    page = st.radio("Ferramentas", ["🏠 Início", "🔎 Localizar e separar PDFs", "🔗 Juntar PDFs",
+                                    "🏷️ Analisar e renomear", "📋 Mesclar por planilha"])
+    st.divider()
+    st.caption("Arquivos são processados temporariamente. Não envie documentos confidenciais para uma demonstração pública.")
+
+if page == "🏠 Início":
+    st.title("Documentos organizados. Trabalho simplificado.")
+    st.write("Localize, separe, analise e combine documentos em lote, com relatórios claros para conferência.")
+    a,b,c = st.columns(3)
+    a.metric("Ferramentas", "4")
+    b.metric("Exportações", "PDF · ZIP · Excel")
+    c.metric("Processamento", "Temporário")
+    st.subheader("Comece por uma ferramenta no menu lateral")
+    st.info("Para separar uma pasta inteira, compacte-a em ZIP e use **Localizar e separar PDFs**. Você pode procurar por nomes ou por uma coluna da planilha.")
+    st.caption("Projeto demonstrativo. A leitura de PDFs digitalizados sem texto ainda não utiliza OCR.")
+
+elif page == "🔎 Localizar e separar PDFs":
+    st.title("Localizar e separar PDFs")
+    st.write("Envie uma pasta compactada (.zip) ou vários PDFs. Escolha os nomes ou números de uma planilha e baixe apenas os documentos correspondentes.")
+    st.info("Exemplo: uma pasta com 200 PDFs + planilha com coluna NF contendo 1001, 1002 e 1003 → ZIP com os documentos encontrados e relatório dos faltantes.")
+    source_zip = st.file_uploader("Pasta de origem (.zip) ou PDF", type=["zip","pdf"], key="find_zip")
+    uploads = st.file_uploader("Ou selecione vários PDFs", type=["pdf"], accept_multiple_files=True, key="find_multiple")
+    mode = st.radio("Como deseja localizar?", ["Nome / lista", "Planilha Excel"], horizontal=True)
+    if mode == "Nome / lista":
+        names = st.text_area("Nomes ou números (um por linha, ou separados por vírgula)", placeholder="1001\n1002\nFornecedor ABC")
+        excel = None
+        column = "NF"
+    else:
+        excel = st.file_uploader("Planilha de referência (.xlsx)", type="xlsx", key="find_excel")
+        column = st.text_input("Nome da coluna a procurar", value="NF")
+        names = ""
+    include_text = st.checkbox("Pesquisar também no texto interno dos PDFs (mais lento)", value=False)
+    if st.button("🔎 Localizar e separar", type="primary"):
+        try:
+            terms = get_terms(mode, names, excel, column)
+            with tempfile.TemporaryDirectory() as tmp:
+                folder = Path(tmp) / "origem"
+                count = collect_inputs(source_zip, uploads, folder)
+                if not count:
+                    st.warning("Envie um ZIP com PDFs ou selecione os arquivos.")
+                else:
+                    files = pdfs(folder)
+                    cache = {}
+                    found = set()
+                    rows = []
+                    for term in terms:
+                        hits = []
+                        errors = []
+                        for file in files:
+                            try:
+                                if matches(term, file, include_text, cache):
+                                    hits.append(file)
+                            except Exception as exc:
+                                errors.append(f"{file.name}: {exc}")
+                        found.update(hits)
+                        if hits:
+                            rows.append(Result(term, "ENCONTRADO", f"{len(hits)} arquivo(s)", "; ".join(str(p.relative_to(folder)) for p in hits[:8])))
+                        elif errors:
+                            rows.append(Result(term, "REVISAR", f"Não localizado; {len(errors)} PDF(s) não puderam ser lidos"))
+                        else:
+                            rows.append(Result(term, "NÃO ENCONTRADO", "Nenhum PDF correspondente"))
+                    package = package_results(rows, found, folder)
+                    st.session_state["find_result"] = (rows, package, count, len(found))
+        except Exception as exc:
+            st.error(f"Não foi possível processar: {exc}")
+    if "find_result" in st.session_state:
+        rows, package, count, nfound = st.session_state["find_result"]
+        a,b,c = st.columns(3)
+        a.metric("PDFs analisados", count)
+        b.metric("PDFs separados", nfound)
+        c.metric("Termos não localizados", sum(r.status != "ENCONTRADO" for r in rows))
+        result_table(rows)
+        st.download_button("📦 Baixar pasta de PDFs encontrados + relatório", package,
+                           file_name="docflow_documentos_separados.zip", mime="application/zip", type="primary")
+
+elif page == "🔗 Juntar PDFs":
+    st.title("Juntar comprovante e notas fiscais")
+    st.write("Cria um PDF para cada nota, colocando o mesmo comprovante antes da nota. Os originais não são alterados.")
+    receipt = st.file_uploader("Comprovante de pagamento", type="pdf", key="receipt")
+    invoices = st.file_uploader("Notas fiscais", type="pdf", accept_multiple_files=True, key="invoices")
+    if st.button("🔗 Combinar documentos", type="primary"):
+        if not receipt or not invoices:
+            st.warning("Envie um comprovante e pelo menos uma nota fiscal.")
         else:
-            with tempfile.TemporaryDirectory() as temp:
-                root = Path(temp)
-                (root/'entrada').mkdir(); (root/'saida').mkdir()
-                r = store(receipt, root/'entrada')
-                files = []
-                (root/'notas').mkdir()
-                for item in invoices: files.append(store(item, root/'notas'))
-                results = merge_receipt_to_many(r, files, root/'saida')
-                show_results(results); download_zip(root/'saida')
-with tab_search:
-    st.subheader('Localizar PDFs por nome ou conteúdo')
-    uploads = st.file_uploader('PDFs para pesquisar', type='pdf', accept_multiple_files=True, key='search_files')
-    term = st.text_input('Termo de busca')
-    year_str = st.text_input('Ano (opcional, ex.: 2025)')
-    content = st.checkbox('Pesquisar também dentro do PDF (texto selecionável)')
-    if st.button('Buscar', key='search'):
-        if not uploads or not term.strip(): st.warning('Envie PDFs e informe um termo.')
-        elif year_str and (not year_str.isdigit() or len(year_str)!=4): st.warning('Informe um ano de quatro dígitos.')
-        else:
-            with tempfile.TemporaryDirectory() as temp:
-                folder = Path(temp)
-                for item in uploads: store(item, folder)
-                show_results(search_pdfs(folder, term, int(year_str) if year_str else None, content))
-with tab_rename:
-    st.subheader('Extrair campos e sugerir nomes (sem modificar originais)')
-    uploads = st.file_uploader('PDFs para analisar', type='pdf', accept_multiple_files=True, key='rename_files')
-    if st.button('Analisar documentos', key='rename'):
-        if not uploads: st.warning('Envie ao menos um PDF.')
-        else:
-            with tempfile.TemporaryDirectory() as temp:
-                folder = Path(temp); files = [store(item, folder) for item in uploads]
-                show_results(rename_suggestions(files))
-            st.caption('Os nomes são sugestões: confira os dados antes de renomear arquivos.')
-with tab_excel:
-    st.subheader('Relacionar notas e comprovantes pelo número da NF')
-    st.caption('A planilha precisa ter uma coluna NF. Os nomes dos PDFs devem conter o número correspondente.')
-    excel = st.file_uploader('Planilha Excel', type='xlsx')
-    notes = st.file_uploader('Notas fiscais', type='pdf', accept_multiple_files=True, key='excel_notes')
-    proofs = st.file_uploader('Comprovantes', type='pdf', accept_multiple_files=True, key='excel_proofs')
-    if st.button('Mesclar pela planilha', key='excel_merge'):
-        if not excel or not notes or not proofs: st.warning('Envie planilha, notas e comprovantes.')
-        else:
-            with tempfile.TemporaryDirectory() as temp:
-                root=Path(temp)
-                for name in ('notas','comprovantes','saida'): (root/name).mkdir()
-                x=store(excel,root)
-                n=[store(f,root/'notas') for f in notes]
-                p=[store(f,root/'comprovantes') for f in proofs]
+            with tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                for name in ("comprovante","notas","saida"): (root/name).mkdir()
                 try:
-                    results=match_by_spreadsheet(x,n,p,root/'saida')
-                    show_results(results); download_zip(root/'saida')
-                except Exception as exc: st.error(str(exc))
+                    proof = persist_upload(receipt, root/"comprovante")
+                    notes = [persist_upload(file, root/"notas") for file in invoices]
+                    rows = merge_receipt_to_many(proof, notes, root/"saida")
+                    package = package_results(rows, set(pdfs(root/"saida")), root/"saida")
+                    st.session_state["merge_result"] = (rows, package)
+                except Exception as exc:
+                    st.error(f"Falha ao combinar: {exc}")
+    if "merge_result" in st.session_state:
+        rows, package = st.session_state["merge_result"]
+        result_table(rows)
+        st.download_button("📦 Baixar PDFs combinados e relatório", package, file_name="docflow_combinados.zip", mime="application/zip", type="primary")
+
+elif page == "🏷️ Analisar e renomear":
+    st.title("Analisar e sugerir nomes")
+    st.write("Extrai campos de PDFs com texto selecionável e sugere nomes. Revise os resultados antes de utilizar.")
+    uploads = st.file_uploader("Documentos PDF", type="pdf", accept_multiple_files=True, key="rename_files")
+    if st.button("🏷️ Analisar documentos", type="primary"):
+        if not uploads:
+            st.warning("Envie pelo menos um PDF.")
+        else:
+            with tempfile.TemporaryDirectory() as tmp:
+                try:
+                    folder = Path(tmp)
+                    paths = [persist_upload(file, folder) for file in uploads]
+                    st.session_state["rename_result"] = rename_suggestions(paths)
+                except Exception as exc:
+                    st.error(f"Erro na análise: {exc}")
+    if "rename_result" in st.session_state:
+        rows = st.session_state["rename_result"]
+        result_table(rows)
+        st.download_button("📊 Baixar sugestões em Excel", report_bytes(rows), file_name="sugestoes_nomes.xlsx")
+
+elif page == "📋 Mesclar por planilha":
+    st.title("Mesclar documentos por planilha")
+    st.write("Associa notas e comprovantes pelo número da NF presente nos nomes dos PDFs. Casos ambíguos ficam para revisão.")
+    excel = st.file_uploader("Planilha Excel (coluna NF)", type="xlsx", key="merge_excel")
+    notes = st.file_uploader("Notas fiscais", type="pdf", accept_multiple_files=True, key="merge_notes")
+    proofs = st.file_uploader("Comprovantes", type="pdf", accept_multiple_files=True, key="merge_proofs")
+    if st.button("📋 Mesclar pela planilha", type="primary"):
+        if not excel or not notes or not proofs:
+            st.warning("Envie a planilha, as notas e os comprovantes.")
+        else:
+            with tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                for name in ("notas","comprovantes","saida"): (root/name).mkdir()
+                try:
+                    xlsx = persist_upload(excel, root)
+                    n = [persist_upload(file, root/"notas") for file in notes]
+                    p = [persist_upload(file, root/"comprovantes") for file in proofs]
+                    rows = match_by_spreadsheet(xlsx, n, p, root/"saida")
+                    package = package_results(rows, set(pdfs(root/"saida")), root/"saida")
+                    st.session_state["spreadsheet_result"] = (rows, package)
+                except Exception as exc:
+                    st.error(f"Falha na mesclagem: {exc}")
+    if "spreadsheet_result" in st.session_state:
+        rows, package = st.session_state["spreadsheet_result"]
+        result_table(rows)
+        st.download_button("📦 Baixar PDFs e relatório", package, file_name="docflow_planilha.zip", mime="application/zip", type="primary")
