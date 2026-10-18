@@ -2,9 +2,9 @@
 
 # Olá, eu sou o Thales 👋
 
-**Suporte de TI · Desenvolvimento · Segurança da Informação**
+**Desenvolvimento · Automação · Segurança da Informação**
 
-Atuo na área de suporte técnico e tenho experiência de estágio em desenvolvimento. Estou direcionando meus estudos e projetos para **cibersegurança**, **automação** e **infraestrutura**, combinando resolução de problemas com programação.
+Tenho experiência em desenvolvimento de software e estou direcionando meus projetos para **cibersegurança**, **automação** e **infraestrutura**, combinando programação e análise técnica.
 
 [![GitHub](https://img.shields.io/badge/GitHub-thlozz-18181b?style=for-the-badge&logo=github)](https://github.com/thlozz)
 
@@ -14,7 +14,7 @@ Atuo na área de suporte técnico e tenho experiência de estágio em desenvolvi
 
 ### Sobre mim
 
-- Experiência com suporte de TI e vivência em desenvolvimento de software.
+- Experiência de estágio em desenvolvimento de software.
 - Interesse em **Security Operations (SOC)**, análise de logs, redes e **GRC**.
 - Construção de ferramentas em **Python** para automatizar tarefas reais.
 - Projetos de estudo com documentação, exemplos e cenários fictícios.
