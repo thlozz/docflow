@@ -1,4 +1,4 @@
-"""DocFlow web interface — v0.4."""
+"""DocFlow web interface — v0.5."""
 from pathlib import Path
 import io
 import re
@@ -55,6 +55,43 @@ div[data-testid="stAlert"] {border-radius:13px}
 .df-logo {background:#dc2626;border-radius:12px;padding:8px 10px}
 .df-sidebar-note {font-size:.78rem;color:#94a3b8;border:1px solid #384152;border-radius:12px;padding:14px;margin-top:18px}
 @media(max-width:700px) {.df-grid {grid-template-columns:1fr}.df-hero {padding:26px 24px}.block-container {padding-top:1.3rem}}
+
+/* Decorative canvas and scroll storytelling */
+.df-hero {min-height:340px;display:flex;flex-direction:column;justify-content:center;padding-right:34%;background:radial-gradient(circle at 83% 48%,rgba(244,63,94,.24),transparent 34%),linear-gradient(118deg,#0c1220,#20283b 65%,#481d2a)}
+.df-hero::after {display:none}
+.df-hero-art {position:absolute;right:0;top:0;height:100%;width:40%;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:.97}
+.df-hero-art svg {width:100%;max-width:370px;height:auto;filter:drop-shadow(0 20px 35px rgba(0,0,0,.2))}
+.df-hero .df-eyebrow,.df-hero h1,.df-hero p {position:relative;z-index:1}
+.df-scroll-hint {color:#fda4af;font-size:.75rem;letter-spacing:.13em;font-weight:700;margin-top:26px;z-index:1}
+.df-story {padding:48px 10px 12px}
+.df-story-title {font-size:clamp(1.5rem,2.8vw,2.5rem);font-weight:800;letter-spacing:-.05em;color:#111827;margin:6px 0 14px}
+.df-story-subtitle {color:#64748b;max-width:620px;margin:0 0 26px}
+.df-timeline {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;position:relative}
+.df-step {position:relative;border-radius:20px;background:white;border:1px solid #e5e7eb;padding:26px 22px;min-height:205px;box-shadow:0 9px 26px rgba(15,23,42,.035)}
+.df-step-number {display:inline-block;color:#dc2626;font-size:.83rem;font-weight:800;letter-spacing:.1em;margin-bottom:24px}
+.df-step h3 {margin:0 0 10px;font-size:1.15rem}
+.df-step p {font-size:.9rem;color:#64748b;margin:0}
+.df-showcase {display:grid;grid-template-columns:1fr 1fr;gap:30px;align-items:center;background:#111827;border-radius:24px;padding:34px 38px;margin:38px 0;color:white;overflow:hidden}
+.df-showcase h2 {color:#fff!important;font-size:clamp(1.6rem,2.7vw,2.4rem);line-height:1.2}
+.df-showcase p {color:#cbd5e1}
+.df-preview {border:1px solid #394154;background:#1b2435;border-radius:16px;padding:18px;transform:rotate(2deg);box-shadow:0 16px 34px #080b1260}
+.df-preview-bar {display:flex;gap:6px;margin-bottom:17px}
+.df-preview-bar i {display:block;width:8px;height:8px;border-radius:50%;background:#fb7185}
+.df-preview-bar i:nth-child(2){background:#fbbf24}.df-preview-bar i:nth-child(3){background:#4ade80}
+.df-preview-row {display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #334155;padding:11px 4px;font-size:.8rem;color:#dbeafe}
+.df-preview-row:last-child {border:0}
+.df-preview-ok {color:#86efac;font-weight:700}
+.df-preview-review {color:#fcd34d;font-weight:700}
+.df-end {text-align:center;padding:35px 20px 55px}
+.df-end h2 {font-size:clamp(1.5rem,2.8vw,2.5rem)}
+.df-end p {color:#64748b}
+@supports (animation-timeline: view()) {
+  .df-card,.df-step,.df-showcase,.df-end {animation:df-appear linear both;animation-timeline:view();animation-range:entry 0% entry 90%}
+  @keyframes df-appear {from {opacity:.25;translate:0 34px}to {opacity:1;translate:0 0}}
+}
+@media(prefers-reduced-motion:reduce) {.df-card,.df-step,.df-showcase,.df-end {animation:none!important;transition:none!important}}
+@media(max-width:850px) {.df-hero {padding-right:42%}.df-timeline {grid-template-columns:1fr}.df-showcase {grid-template-columns:1fr}}
+@media(max-width:650px) {.df-hero {min-height:410px;padding:30px 24px;justify-content:flex-start}.df-hero-art {top:auto;bottom:-65px;right:-55px;width:65%;height:230px;opacity:.55}.df-hero h1 {font-size:2rem!important}.df-showcase {padding:26px}.df-story {padding:30px 0 5px}}
 </style>""", unsafe_allow_html=True)
 
 MAX_FILES = 1200
@@ -187,7 +224,7 @@ def output_actions(rows, output_dir=None, key="output"):
 
 with st.sidebar:
     st.markdown('<div class="df-brand"><span class="df-logo">◈</span> DocFlow</div>', unsafe_allow_html=True)
-    st.caption("WORKSPACE / V0.4")
+    st.caption("WORKSPACE / V0.5")
     st.markdown('<div class="df-section" style="color:#94a3b8">NAVEGAÇÃO</div>', unsafe_allow_html=True)
     page = st.radio("Ferramentas", ["🏠 Início", "🔎 Localizar e separar PDFs", "🔗 Juntar PDFs",
                                     "🏷️ Analisar e renomear", "📋 Mesclar por planilha"], label_visibility="collapsed")
@@ -195,9 +232,16 @@ with st.sidebar:
 
 if page == "🏠 Início":
     st.markdown("""<section class="df-hero">
-      <div class="df-eyebrow">DOCUMENT WORKSPACE · V0.4</div>
+      <div class="df-eyebrow">DOCUMENT WORKSPACE · V0.5</div>
       <h1>Menos tarefas repetitivas.<br>Mais tempo para o que importa.</h1>
-      <p>Seu centro de automação documental. Encontre, organize e combine PDFs em lote com relatórios para cada operação.</p>
+      <p>Seu centro de automação documental. Encontre, organize e combine PDFs em lote com relatórios para cada operação.</p>\n      <div class="df-scroll-hint">↓ EXPLORE A EXPERIÊNCIA</div><div class="df-hero-art"><svg viewBox="0 0 390 360" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+<defs><linearGradient id="sheetA" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#cbd5e1"/></linearGradient><linearGradient id="sheetB" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fb7185"/><stop offset="1" stop-color="#be123c"/></linearGradient></defs>
+<circle cx="202" cy="175" r="142" fill="none" stroke="#fda4af" stroke-opacity=".15" stroke-dasharray="6 11" stroke-width="2"/>
+<circle cx="202" cy="175" r="111" fill="#fb7185" fill-opacity=".07"/>
+<g transform="translate(63 58) rotate(-13 90 120)"><rect x="15" y="15" width="176" height="230" rx="15" fill="#475569"/><rect x="0" y="0" width="176" height="230" rx="15" fill="url(#sheetA)"/><rect x="22" y="30" width="58" height="10" rx="5" fill="#e11d48"/><rect x="22" y="57" width="126" height="6" rx="3" fill="#94a3b8"/><rect x="22" y="73" width="112" height="6" rx="3" fill="#cbd5e1"/><rect x="22" y="105" width="132" height="66" rx="9" fill="#e2e8f0"/><path d="M39 149l28-23 20 13 31-28 21 18" fill="none" stroke="#e11d48" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><rect x="22" y="193" width="90" height="7" rx="3" fill="#94a3b8"/></g>
+<g transform="translate(182 111) rotate(12 80 105)"><rect x="0" y="0" width="154" height="200" rx="14" fill="url(#sheetB)"/><rect x="17" y="20" width="120" height="160" rx="8" fill="#fff" fill-opacity=".96"/><rect x="34" y="40" width="72" height="9" rx="4" fill="#e11d48"/><rect x="34" y="67" width="86" height="6" rx="3" fill="#94a3b8"/><rect x="34" y="84" width="75" height="6" rx="3" fill="#cbd5e1"/><circle cx="77" cy="132" r="24" fill="#dcfce7"/><path d="m65 132 9 9 18-19" fill="none" stroke="#16a34a" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></g>
+<circle cx="323" cy="62" r="9" fill="#fb7185"/><circle cx="45" cy="255" r="6" fill="#fda4af"/><path d="m334 265 9 9 18-18" stroke="#fda4af" stroke-width="5" fill="none" stroke-linecap="round"/>
+</svg></div>
     </section>""", unsafe_allow_html=True)
     a,b,c = st.columns(3)
     a.metric("Ferramentas disponíveis", "04")
@@ -206,6 +250,30 @@ if page == "🏠 Início":
     st.markdown('<div class="df-section">EXPLORAR FERRAMENTAS</div>', unsafe_allow_html=True)
     st.markdown("""<div class="df-grid"><div class="df-card"><span class="df-icon"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/><path d="M8 11h6M11 8v6"/></svg></span><h3>Localizar e separar</h3><p>Busque centenas de PDFs por nome ou planilha. Exporte os encontrados e um relatório de pendências.</p></div><div class="df-card"><span class="df-icon"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3v7a4 4 0 0 0 4 4h6"/><path d="m14 11 3 3-3 3"/><path d="M7 21v-3a4 4 0 0 1 4-4"/></svg></span><h3>Juntar documentos</h3><p>Combine um comprovante com várias notas, mantendo os arquivos originais intactos.</p></div><div class="df-card"><span class="df-icon"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h10l8 8-9 9-9-9z"/><circle cx="8" cy="9" r="1.5"/></svg></span><h3>Análise e nomes</h3><p>Extraia informações de PDFs textuais e gere sugestões de nomes para conferência.</p></div><div class="df-card"><span class="df-icon"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 9h16M10 9v12M4 15h16"/></svg></span><h3>Mesclar por planilha</h3><p>Relacione notas e comprovantes pela coluna NF e revise os casos ambíguos.</p></div></div>""", unsafe_allow_html=True)
     st.markdown('<div class="df-note"><b>Como começar:</b> escolha uma ferramenta no menu lateral. Para enviar uma pasta inteira de PDFs, compacte-a em ZIP e use <b>Localizar e separar PDFs</b>.</div>', unsafe_allow_html=True)
+    st.markdown("""<section class="df-story">
+      <div class="df-eyebrow">FLUXO SIMPLES</div>
+      <div class="df-story-title">De uma pasta cheia de PDFs a tudo organizado.</div>
+      <p class="df-story-subtitle">Um processo em três etapas. Sem precisar renomear ou localizar cada documento manualmente.</p>
+      <div class="df-timeline">
+        <article class="df-step"><span class="df-step-number">01 / ENVIAR</span><h3>Reúna os documentos</h3><p>Selecione vários PDFs ou envie uma pasta compactada em ZIP.</p></article>
+        <article class="df-step"><span class="df-step-number">02 / LOCALIZAR</span><h3>Defina o critério</h3><p>Informe nomes, números ou uma coluna da sua planilha Excel.</p></article>
+        <article class="df-step"><span class="df-step-number">03 / EXPORTAR</span><h3>Baixe os resultados</h3><p>Receba os arquivos encontrados em ZIP e um relatório de conferência.</p></article>
+      </div>
+    </section>
+    <section class="df-showcase">
+      <div><div class="df-eyebrow" style="color:#fda4af">PRÉVIA ILUSTRATIVA</div>
+      <h2>Resultados claros, sem perder o controle.</h2>
+      <p>Veja o que foi encontrado, identifique pendências e faça o download dos documentos organizados.</p>
+      <p style="font-size:.78rem;color:#94a3b8">Os dados ao lado são fictícios e servem apenas para demonstrar a interface.</p></div>
+      <div class="df-preview"><div class="df-preview-bar"><i></i><i></i><i></i></div>
+      <div class="df-preview-row"><span>NF_1001.pdf</span><span class="df-preview-ok">✓ Encontrado</span></div>
+      <div class="df-preview-row"><span>NF_1002.pdf</span><span class="df-preview-ok">✓ Encontrado</span></div>
+      <div class="df-preview-row"><span>NF_1003.pdf</span><span class="df-preview-review">! Revisar</span></div>
+      <div class="df-preview-row"><span>relatorio.xlsx</span><span>↓ Exportar</span></div></div>
+    </section>
+    <section class="df-end"><div class="df-eyebrow">PRONTO PARA COMEÇAR?</div>
+    <h2>Seu próximo lote, mais organizado.</h2>
+    <p>Selecione uma ferramenta no menu lateral e experimente com documentos fictícios.</p></section>""", unsafe_allow_html=True)
     st.caption("Projeto de portfólio • PDFs digitalizados sem texto selecionável ainda exigem OCR, não disponível nesta versão.")
 
 elif page == "🔎 Localizar e separar PDFs":
