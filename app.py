@@ -15,15 +15,46 @@ from docflow.core import (
 
 st.set_page_config(page_title="DocFlow | Automação de documentos", page_icon="📁", layout="wide", initial_sidebar_state="expanded")
 st.markdown("""<style>
-:root {color-scheme:light}
-.block-container {padding-top:2rem;max-width:1250px}
-h1,h2,h3 {letter-spacing:-.035em}
-[data-testid="stSidebar"] {background:#111827}
-[data-testid="stSidebar"] * {color:#f9fafb}
-[data-testid="stMetric"] {border:1px solid #e5e7eb;border-radius:14px;padding:15px;background:#fff}
-.stButton>button[kind="primary"],[data-testid="stDownloadButton"] button[kind="primary"] {background:#b91c1c;border-color:#b91c1c;color:white}
-.stButton>button[kind="primary"]:hover {background:#991b1b;border-color:#991b1b}
-div[data-testid="stAlert"] {border-radius:12px}
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@500;600;700;800&display=swap');
+:root {--accent:#dc2626;--ink:#111827;--muted:#64748b}
+html,body,[class*="css"],[data-testid="stApp"] {font-family:'DM Sans',sans-serif}
+[data-testid="stAppViewContainer"] {background:radial-gradient(ellipse at 90% 0%,#fff1f2 0%,transparent 34%),#f7f8fb}
+.block-container {padding-top:2.2rem;padding-bottom:4rem;max-width:1250px}
+h1,h2,h3 {font-family:'Manrope',sans-serif;letter-spacing:-.045em;color:#121826}
+h1 {font-size:clamp(2rem,3.3vw,3.2rem)!important;font-weight:800!important}
+h2,h3 {font-weight:800!important}
+p {line-height:1.65}
+[data-testid="stSidebar"] {background:linear-gradient(165deg,#111827 0%,#191b2b 65%,#27151d 100%);border-right:1px solid #2d3443}
+[data-testid="stSidebar"] * {color:#e8edf6}
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {color:#aeb8c9}
+[data-testid="stSidebar"] [role="radiogroup"] label {padding:11px 12px;border-radius:11px;transition:background .15s}
+[data-testid="stSidebar"] [role="radiogroup"] label:hover {background:#303548}
+[data-testid="stSidebar"] [data-testid="stRadio"] div[role="radiogroup"] {gap:6px}
+[data-testid="stMetric"] {border:1px solid #e8eaf0;border-radius:18px;padding:20px;background:white;box-shadow:0 7px 24px rgba(15,23,42,.035)}
+[data-testid="stMetricLabel"] {color:#64748b}
+[data-testid="stMetricValue"] {font-family:'Manrope',sans-serif;font-weight:800}
+[data-testid="stFileUploader"],[data-testid="stDataFrame"],[data-testid="stTextArea"] {border-radius:14px}
+.stButton>button,.stDownloadButton>button {border-radius:11px;min-height:44px;font-weight:700;transition:all .15s}
+.stButton>button[kind="primary"],[data-testid="stDownloadButton"] button[kind="primary"] {background:#dc2626;border-color:#dc2626;color:white;box-shadow:0 6px 16px rgba(220,38,38,.16)}
+.stButton>button[kind="primary"]:hover {background:#b91c1c;border-color:#b91c1c}
+div[data-testid="stAlert"] {border-radius:13px}
+.df-eyebrow {font-size:.73rem;letter-spacing:.17em;text-transform:uppercase;font-weight:800;color:#ef4444;margin-bottom:12px}
+.df-hero {background:linear-gradient(115deg,#111827 0%,#1f2937 62%,#471c28 100%);padding:38px 42px;border-radius:24px;position:relative;overflow:hidden;box-shadow:0 16px 42px rgba(17,24,39,.12);margin-bottom:25px}
+.df-hero:after {content:"";position:absolute;width:280px;height:280px;border:55px solid rgba(248,113,113,.09);border-radius:50%;right:-85px;top:-140px}
+.df-hero .df-eyebrow {color:#fca5a5}
+.df-hero h1 {color:#fff!important;font-size:clamp(2rem,3.4vw,3rem)!important;max-width:680px;margin:0 0 13px}
+.df-hero p {color:#cbd5e1;max-width:620px;font-size:1.03rem;margin:0}
+.df-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:12px 0 28px}
+.df-card {background:white;border:1px solid #e8eaf0;border-radius:18px;padding:24px;min-height:158px;box-shadow:0 8px 25px rgba(15,23,42,.035)}
+.df-card .df-icon {display:inline-flex;background:#fff1f2;color:#be123c;border-radius:12px;padding:9px 12px;font-size:1.25rem;margin-bottom:14px}
+.df-card h3 {font-size:1.12rem;margin:0 0 7px;font-weight:800}
+.df-card p {color:#64748b;margin:0;font-size:.92rem}
+.df-section {font-size:.75rem;color:#64748b;font-weight:800;letter-spacing:.12em;text-transform:uppercase;margin:25px 0 12px}
+.df-note {background:#fff;border:1px solid #e8eaf0;border-left:4px solid #ef4444;border-radius:13px;padding:16px 20px;color:#475569;margin:16px 0}
+.df-brand {display:flex;align-items:center;gap:11px;font-size:1.55rem;font-weight:800;letter-spacing:-.05em;color:white;margin:10px 0 5px}
+.df-logo {background:#dc2626;border-radius:12px;padding:8px 10px}
+.df-sidebar-note {font-size:.78rem;color:#94a3b8;border:1px solid #384152;border-radius:12px;padding:14px;margin-top:18px}
+@media(max-width:700px) {.df-grid {grid-template-columns:1fr}.df-hero {padding:26px 24px}.block-container {padding-top:1.3rem}}
 </style>""", unsafe_allow_html=True)
 
 MAX_FILES = 1200
@@ -155,23 +186,32 @@ def output_actions(rows, output_dir=None, key="output"):
                                mime="application/zip", key=f"{key}_zip")
 
 with st.sidebar:
-    st.title("📁 DocFlow")
-    st.caption("AUTOMAÇÃO DOCUMENTAL • V0.2")
+    st.markdown('<div class="df-brand"><span class="df-logo">◈</span> DocFlow</div>', unsafe_allow_html=True)
+    st.caption("WORKSPACE / V0.3")
+    st.markdown('<div class="df-section" style="color:#94a3b8">NAVEGAÇÃO</div>', unsafe_allow_html=True)
     page = st.radio("Ferramentas", ["🏠 Início", "🔎 Localizar e separar PDFs", "🔗 Juntar PDFs",
-                                    "🏷️ Analisar e renomear", "📋 Mesclar por planilha"])
-    st.divider()
-    st.caption("Arquivos são processados temporariamente. Não envie documentos confidenciais para uma demonstração pública.")
+                                    "🏷️ Analisar e renomear", "📋 Mesclar por planilha"], label_visibility="collapsed")
+    st.markdown('<div class="df-sidebar-note">🔒 <b>Privacidade primeiro</b><div style="margin-top:7px">Use documentos fictícios ou autorizados. Os arquivos são processados temporariamente.</div></div>', unsafe_allow_html=True)
 
 if page == "🏠 Início":
-    st.title("Documentos organizados. Trabalho simplificado.")
-    st.write("Localize, separe, analise e combine documentos em lote, com relatórios claros para conferência.")
+    st.markdown("""<section class="df-hero">
+      <div class="df-eyebrow">DOCUMENT WORKSPACE · V0.3</div>
+      <h1>Menos tarefas repetitivas.<br>Mais tempo para o que importa.</h1>
+      <p>Seu centro de automação documental. Encontre, organize e combine PDFs em lote com relatórios para cada operação.</p>
+    </section>""", unsafe_allow_html=True)
     a,b,c = st.columns(3)
-    a.metric("Ferramentas", "4")
-    b.metric("Exportações", "PDF · ZIP · Excel")
-    c.metric("Processamento", "Temporário")
-    st.subheader("Comece por uma ferramenta no menu lateral")
-    st.info("Para separar uma pasta inteira, compacte-a em ZIP e use **Localizar e separar PDFs**. Você pode procurar por nomes ou por uma coluna da planilha.")
-    st.caption("Projeto demonstrativo. A leitura de PDFs digitalizados sem texto ainda não utiliza OCR.")
+    a.metric("Ferramentas disponíveis", "04")
+    b.metric("Formatos de saída", "PDF · ZIP · XLSX")
+    c.metric("Modo de trabalho", "Na nuvem")
+    st.markdown('<div class="df-section">EXPLORAR FERRAMENTAS</div>', unsafe_allow_html=True)
+    st.markdown("""<div class="df-grid">
+      <div class="df-card"><span class="df-icon">🔎</span><h3>Localizar e separar</h3><p>Busque centenas de PDFs por nome ou planilha. Exporte os encontrados e um relatório de pendências.</p></div>
+      <div class="df-card"><span class="df-icon">🔗</span><h3>Juntar documentos</h3><p>Combine um comprovante com várias notas, mantendo os arquivos originais intactos.</p></div>
+      <div class="df-card"><span class="df-icon">🏷️</span><h3>Análise e nomes</h3><p>Extraia informações de PDFs textuais e gere sugestões de nomes para conferência.</p></div>
+      <div class="df-card"><span class="df-icon">📋</span><h3>Mesclar por planilha</h3><p>Relacione notas e comprovantes pela coluna NF e revise os casos ambíguos.</p></div>
+    </div>""", unsafe_allow_html=True)
+    st.markdown('<div class="df-note"><b>Como começar:</b> escolha uma ferramenta no menu lateral. Para enviar uma pasta inteira de PDFs, compacte-a em ZIP e use <b>Localizar e separar PDFs</b>.</div>', unsafe_allow_html=True)
+    st.caption("Projeto de portfólio • PDFs digitalizados sem texto selecionável ainda exigem OCR, não disponível nesta versão.")
 
 elif page == "🔎 Localizar e separar PDFs":
     st.title("Localizar e separar PDFs")
