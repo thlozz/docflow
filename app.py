@@ -1,4 +1,4 @@
-"""DocFlow web interface — v0.7."""
+"""DocFlow web interface — v0.8."""
 from pathlib import Path
 import io
 import re
@@ -93,7 +93,7 @@ div[data-testid="stAlert"] {border-radius:13px}
 @media(max-width:850px) {.df-hero {padding-right:42%}.df-timeline {grid-template-columns:1fr}.df-showcase {grid-template-columns:1fr}}
 @media(max-width:650px) {.df-hero {min-height:410px;padding:30px 24px;justify-content:flex-start}.df-hero-art {top:auto;bottom:-65px;right:-55px;width:65%;height:230px;opacity:.55}.df-hero h1 {font-size:2rem!important}.df-showcase {padding:26px}.df-story {padding:30px 0 5px}}
 
-/* V0.7 — layered 3D document scene and progressive scroll narrative */
+/* V0.8 — layered 3D document scene and progressive scroll narrative */
 .df-hero {isolation:isolate;min-height:430px}
 .df-scene {perspective:950px;transform-style:preserve-3d;overflow:visible}
 .df-glow {position:absolute;width:290px;height:290px;border-radius:50%;background:radial-gradient(circle,#fb718550,transparent 70%);filter:blur(22px);top:50%;left:50%;transform:translate(-50%,-50%)}
@@ -141,7 +141,7 @@ div[data-testid="stAlert"] {border-radius:13px}
 @media(max-width:650px) {.df-hero {min-height:450px;padding-right:24px}.df-scene {width:78%;height:245px;right:-18%;bottom:-68px;top:auto;opacity:.56}.df-document {scale:.7}.df-timeline:before {display:none}.df-showcase {min-height:0}}
 @media(prefers-reduced-motion:reduce) {.df-document,.df-float,.df-orbit,.df-scroll-progress,.df-story-title,.df-story-subtitle,.df-step,.df-showcase,.df-end,.df-preview {animation:none!important;transition:none!important;filter:none!important}.df-scroll-progress {width:100%}}
 
-/* V0.7 — consistent gradient design across every workspace */
+/* V0.8 — consistent gradient design across every workspace */
 .df-workspace-hero {position:relative;overflow:hidden;border-radius:22px;background:radial-gradient(circle at 87% 15%,#f43f5e45,transparent 30%),linear-gradient(118deg,#111827 0%,#20293b 62%,#561e32 100%);padding:34px 38px;margin:0 0 28px;box-shadow:0 14px 38px #11182719;isolation:isolate}
 .df-workspace-hero:before {content:"";position:absolute;width:235px;height:235px;border:1px solid #fb718555;border-radius:45px;transform:rotate(28deg);right:-38px;top:-70px;box-shadow:0 0 0 35px #fb71850a,0 0 0 75px #fb718508}
 .df-workspace-hero:after {content:"";position:absolute;width:105px;height:135px;border-radius:12px;background:linear-gradient(145deg,#ffffff30,#ffffff08);border:1px solid #ffffff25;right:105px;top:30px;transform:rotate(-16deg);box-shadow:18px 20px 0 #fb71851a;pointer-events:none}
@@ -156,6 +156,32 @@ div[data-testid="stAlert"] {border-radius:13px}
 .df-benefit strong {display:block;font-size:1rem;color:#9f1239;margin-bottom:8px}
 .df-benefit span {font-size:.86rem;color:#64748b}
 @media(max-width:700px){.df-workspace-hero {padding:26px 22px}.df-workspace-hero:after{right:-40px;opacity:.3}.df-benefits{grid-template-columns:1fr}}
+
+/* v0.8 — editorial product UI, restrained gradients and visual rhythm */
+:root {--df-crimson:#e11d48;--df-night:#101624}
+.df-hero,.df-workspace-hero,.df-showcase {border:1px solid #ffffff15}
+.df-hero {background:radial-gradient(ellipse at 85% 38%,#f43f5e36,transparent 40%),linear-gradient(122deg,#0b1020 3%,#1e293b 58%,#511b33 100%)}
+.df-workspace-hero {background:radial-gradient(ellipse at 88% 28%,#fb718545,transparent 35%),linear-gradient(115deg,#0d1323,#20283b 63%,#571e35)}
+.df-section {display:flex;align-items:center;gap:13px}
+.df-section:after {content:"";height:1px;flex:1;background:linear-gradient(90deg,#fecdd3,transparent)}
+.df-card {border-radius:20px;padding:27px;background:linear-gradient(150deg,#fff 55%,#fff8f9)}
+.df-card h3 {font-size:1.14rem}
+.df-card .df-icon {border:1px solid #fecdd3}
+.df-card:hover .df-icon {background:linear-gradient(145deg,#be123c,#fb7185);color:white;border-color:#fb7185}
+.df-benefit {border:1px solid #f1e3e8;background:linear-gradient(135deg,#fff,#fff9fa)}
+.df-note {background:linear-gradient(105deg,#fff,#fff7f8)}
+.df-workspace-hero:after {background:linear-gradient(145deg,#ffffff2b,#ffffff05);box-shadow:18px 20px 0 #fb71851a,38px 42px 0 #ffffff0a}
+.df-utility-head {display:flex;align-items:center;justify-content:space-between;gap:14px;margin:8px 0 15px;color:#64748b;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;font-weight:800}
+.df-utility-head:after {content:"";height:1px;flex:1;background:linear-gradient(90deg,#fecdd3,transparent)}
+.df-status {display:inline-block;padding:6px 11px;border-radius:99px;background:#fff1f2;color:#be123c;font-size:.75rem;font-weight:800;border:1px solid #fecdd3}
+[data-testid="stFileUploader"] {background:linear-gradient(135deg,#fff,#fffafb);border:1px solid #f1e3e8;border-radius:16px;padding:8px}
+[data-testid="stFileUploader"] section {border-radius:12px;border-color:#fda4af}
+[data-testid="stDataFrame"] {border:1px solid #e5e7eb;overflow:hidden}
+.stButton>button[kind="primary"],[data-testid="stDownloadButton"] button[kind="primary"] {background:linear-gradient(105deg,#be123c,#e11d48 65%,#f43f5e);border-color:#be123c;box-shadow:0 9px 22px #e11d4830}
+.stButton>button[kind="primary"]:hover,[data-testid="stDownloadButton"] button[kind="primary"]:hover {background:linear-gradient(105deg,#9f1239,#be123c 65%,#e11d48);transform:translateY(-1px)}
+.df-footer {margin:55px 0 12px;padding:22px 0;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between;gap:16px;color:#64748b;font-size:.8rem}
+.df-footer b {color:#be123c}
+@media(max-width:700px){.df-footer {flex-direction:column}}
 </style>""", unsafe_allow_html=True)
 
 MAX_FILES = 1200
@@ -288,7 +314,7 @@ def output_actions(rows, output_dir=None, key="output"):
 
 with st.sidebar:
     st.markdown('<div class="df-brand"><span class="df-logo">◈</span> DocFlow</div>', unsafe_allow_html=True)
-    st.caption("WORKSPACE / V0.7")
+    st.caption("WORKSPACE / V0.8")
     st.markdown('<div class="df-section" style="color:#94a3b8">NAVEGAÇÃO</div>', unsafe_allow_html=True)
     page = st.radio("Ferramentas", ["🏠 Início", "🔎 Localizar e separar PDFs", "🔗 Juntar PDFs",
                                     "🏷️ Analisar e renomear", "📋 Mesclar por planilha"], label_visibility="collapsed")
@@ -348,6 +374,7 @@ elif page == "🔎 Localizar e separar PDFs":
     st.markdown("""<section class="df-workspace-hero"><div class="df-eyebrow">PESQUISA INTELIGENTE</div><h1>Localizar e separar PDFs</h1><p>Encontre documentos por nome, número ou planilha e exporte tudo em um pacote organizado.</p></section>""", unsafe_allow_html=True)
     st.write("Envie uma pasta compactada (.zip) ou vários PDFs. Escolha os nomes ou números de uma planilha e baixe apenas os documentos correspondentes.")
     st.info("Exemplo: uma pasta com 200 PDFs + planilha com coluna NF contendo 1001, 1002 e 1003 → ZIP com os documentos encontrados e relatório dos faltantes.")
+    st.markdown('<div class="df-utility-head">ÁREA DE TRABALHO <span class="df-status">PROCESSAMENTO LOCAL NA SESSÃO</span></div>', unsafe_allow_html=True)
     source_zip = st.file_uploader("Pasta de origem (.zip) ou PDF", type=["zip","pdf"], key="find_zip")
     uploads = st.file_uploader("Ou selecione vários PDFs", type=["pdf"], accept_multiple_files=True, key="find_multiple")
     mode = st.radio("Como deseja localizar?", ["Nome / lista", "Planilha Excel"], horizontal=True)
@@ -406,6 +433,7 @@ elif page == "🔎 Localizar e separar PDFs":
 elif page == "🔗 Juntar PDFs":
     st.markdown("""<section class="df-workspace-hero"><div class="df-eyebrow">COMBINAÇÃO EM LOTE</div><h1>Juntar comprovante e notas fiscais</h1><p>Anexe um comprovante a cada nota fiscal, preservando os arquivos originais.</p></section>""", unsafe_allow_html=True)
     st.write("Cria um PDF para cada nota, colocando o mesmo comprovante antes da nota. Os originais não são alterados.")
+    st.markdown('<div class="df-utility-head">ÁREA DE TRABALHO <span class="df-status">PROCESSAMENTO LOCAL NA SESSÃO</span></div>', unsafe_allow_html=True)
     receipt = st.file_uploader("Comprovante de pagamento", type="pdf", key="receipt")
     invoices = st.file_uploader("Notas fiscais", type="pdf", accept_multiple_files=True, key="invoices")
     if st.button("🔗 Combinar documentos", type="primary"):
@@ -431,6 +459,7 @@ elif page == "🔗 Juntar PDFs":
 elif page == "🏷️ Analisar e renomear":
     st.markdown("""<section class="df-workspace-hero"><div class="df-eyebrow">ANÁLISE DOCUMENTAL</div><h1>Analisar e sugerir nomes</h1><p>Identifique informações em PDFs textuais e gere sugestões de nomes para conferência.</p></section>""", unsafe_allow_html=True)
     st.write("Extrai campos de PDFs com texto selecionável e sugere nomes. Revise os resultados antes de utilizar.")
+    st.markdown('<div class="df-utility-head">ÁREA DE TRABALHO <span class="df-status">PROCESSAMENTO LOCAL NA SESSÃO</span></div>', unsafe_allow_html=True)
     uploads = st.file_uploader("Documentos PDF", type="pdf", accept_multiple_files=True, key="rename_files")
     if st.button("🏷️ Analisar documentos", type="primary"):
         if not uploads:
@@ -451,6 +480,7 @@ elif page == "🏷️ Analisar e renomear":
 elif page == "📋 Mesclar por planilha":
     st.markdown("""<section class="df-workspace-hero"><div class="df-eyebrow">AUTOMAÇÃO COM EXCEL</div><h1>Mesclar documentos por planilha</h1><p>Relacione notas e comprovantes pelo número da NF e identifique casos que exigem revisão.</p></section>""", unsafe_allow_html=True)
     st.write("Associa notas e comprovantes pelo número da NF presente nos nomes dos PDFs. Casos ambíguos ficam para revisão.")
+    st.markdown('<div class="df-utility-head">ÁREA DE TRABALHO <span class="df-status">PROCESSAMENTO LOCAL NA SESSÃO</span></div>', unsafe_allow_html=True)
     excel = st.file_uploader("Planilha Excel (coluna NF)", type="xlsx", key="merge_excel")
     notes = st.file_uploader("Notas fiscais", type="pdf", accept_multiple_files=True, key="merge_notes")
     proofs = st.file_uploader("Comprovantes", type="pdf", accept_multiple_files=True, key="merge_proofs")
@@ -474,3 +504,6 @@ elif page == "📋 Mesclar por planilha":
         rows, package = st.session_state["spreadsheet_result"]
         result_table(rows)
         st.download_button("📦 Baixar PDFs e relatório", package, file_name="docflow_planilha.zip", mime="application/zip", type="primary")
+
+# Shared footer across all workspaces.
+st.markdown('<footer class="df-footer"><span><b>DocFlow</b> / Automação documental em Python</span><span>PDF · Excel · ZIP &nbsp; | &nbsp; Projeto de portfólio</span></footer>', unsafe_allow_html=True)
