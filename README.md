@@ -17,7 +17,7 @@ DocFlow é uma aplicação web construída com **Python e Streamlit** para organ
 
 ### Interface
 
-A interface utiliza uma identidade visual própria com degradês em vermelho e grafite, ilustrações em CSS com profundidade, navegação lateral e transições suaves. O layout é responsivo e respeita a preferência do sistema por movimento reduzido.
+A interface apresenta quatro operações em navegação lateral, entradas de PDF/ZIP/Excel e tabelas de resultados com status textuais (OK, REVISAR e ERRO). O tema utiliza componentes nativos do Streamlit, sem fontes externas.
 
 ## Como usar
 
@@ -65,7 +65,14 @@ python -m pip install -e '.[dev]'
 python -m pytest -q
 ```
 
-Os testes incluem cenários sintéticos com comprovantes e notas de múltiplas páginas, números de NF semelhantes, planilhas incompletas, correspondências ambíguas e arquivos corrompidos. **A presença dos testes não implica que todos já tenham sido executados com sucesso no ambiente de produção.**
+Os testes incluem cenários sintéticos com comprovantes e notas de múltiplas páginas, números de NF semelhantes, planilhas incompletas, correspondências ambíguas e arquivos corrompidos. O GitHub Actions executa pytest e ruff em Python 3.10, 3.11 e 3.12. Consulte o resultado das execuções antes de considerar a suíte aprovada.
+
+## Limites de processamento
+
+- Até 1.200 PDFs por lote ZIP.
+- Até 250 MB descompactados.
+- Até 2.000 termos por busca.
+- PDFs digitalizados sem texto selecionável não têm suporte a OCR.
 
 ## Estrutura
 
