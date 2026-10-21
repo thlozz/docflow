@@ -35,6 +35,18 @@ def money(value: str) -> Decimal | None:
     try: return Decimal(value).quantize(Decimal('0.01'))
     except InvalidOperation: return None
 
+def valid_cnpj(value: str) -> bool:
+    """Valida CNPJ numérico pelo módulo 11."""
+    digits = re.sub(r'\D', '', value)
+    if len(digits) != 14 or len(set(digits)) == 1:
+        return False
+    for size, weights in ((12, (5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2)),
+                          (13, (6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2))):
+        remainder = sum(int(digits[i]) * weights[i] for i in range(size)) % 11
+        if int(digits[size]) != (0 if remainder < 2 else 11 - remainder):
+            return False
+    return True
+
 def extract_fields(path: Path) -> dict:
     text = read_pdf(path)
     patterns = {
@@ -44,7 +56,7 @@ def extract_fields(path: Path) -> dict:
     }
     fields = {}
     for key, pattern in patterns.items():
-        match = re.search(pattern, text, re.I)
+        match = next((m for m in re.finditer(pattern, text, re.I) if key != 'cnpj' or valid_cnpj(m.group(0))), None)
         fields[key] = (match.group(1) if key != 'cnpj' else match.group(0)) if match else None
     if fields['valor'] is not None: fields['valor'] = money(fields['valor'])
     return fields
@@ -106,26 +118,31 @@ def export_report(results: list[Result], destination: Path) -> Path:
 def match_by_spreadsheet(excel: Path, invoices: list[Path], receipts: list[Path], output_dir: Path, invoice_column: str = 'NF') -> list[Result]:
     """Match invoice numbers in Excel against filenames; ambiguous matches require review."""
     wb = load_workbook(excel, read_only=True, data_only=True)
-    ws = wb.active; rows = ws.iter_rows(values_only=True)
-    headers = [str(v or '').strip().casefold() for v in next(rows)]
-    try: idx = headers.index(invoice_column.strip().casefold())
-    except ValueError: raise ValueError(f'Coluna {invoice_column!r} não encontrada na planilha')
-    results = []
-    for row in rows:
-        if idx >= len(row) or row[idx] is None: continue
-        number = str(row[idx]).strip()
-        if number.endswith('.0'): number = number[:-2]
-        pattern = re.compile(r'(?<!\d)' + re.escape(number) + r'(?!\d)')
-        notes = [p for p in invoices if pattern.search(p.stem)]
-        proofs = [p for p in receipts if pattern.search(p.stem)]
-        if len(notes) != 1 or len(proofs) != 1:
-            results.append(Result(number, 'REVISAR', f'{len(notes)} notas e {len(proofs)} comprovantes encontrados'))
-            continue
-        try:
-            dest = Path(output_dir) / f'NF_{clean_name(number)}.pdf'
-            if dest.exists(): raise FileExistsError('Arquivo de saída já existe')
-            merge_pair(proofs[0], notes[0], dest)
-            results.append(Result(number, 'OK', 'Comprovante antes da nota', str(dest)))
-        except Exception as exc: results.append(Result(number, 'ERRO', str(exc)))
-    wb.close()
-    return results
+    try:
+        ws = wb.active; rows = ws.iter_rows(values_only=True)
+        first = next(rows, None)
+        if first is None or not any(v is not None and str(v).strip() for v in first):
+            raise ValueError('A planilha está vazia ou não possui cabeçalho.')
+        headers = [str(v or '').strip().casefold() for v in first]
+        try: idx = headers.index(invoice_column.strip().casefold())
+        except ValueError: raise ValueError(f'Coluna {invoice_column!r} não encontrada na planilha')
+        results = []
+        for row in rows:
+            if idx >= len(row) or row[idx] is None: continue
+            number = str(row[idx]).strip()
+            if number.endswith('.0'): number = number[:-2]
+            pattern = re.compile(r'(?<!\d)' + re.escape(number) + r'(?!\d)')
+            notes = [p for p in invoices if pattern.search(p.stem)]
+            proofs = [p for p in receipts if pattern.search(p.stem)]
+            if len(notes) != 1 or len(proofs) != 1:
+                results.append(Result(number, 'REVISAR', f'{len(notes)} notas e {len(proofs)} comprovantes encontrados'))
+                continue
+            try:
+                dest = Path(output_dir) / f'NF_{clean_name(number)}.pdf'
+                if dest.exists(): raise FileExistsError('Arquivo de saída já existe')
+                merge_pair(proofs[0], notes[0], dest)
+                results.append(Result(number, 'OK', 'Comprovante antes da nota', str(dest)))
+            except Exception as exc: results.append(Result(number, 'ERRO', str(exc)))
+        return results
+    finally:
+        wb.close()
